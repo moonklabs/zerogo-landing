@@ -488,7 +488,8 @@ export default function App() {
               <p>주소 : 경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩), 502호</p>
               <p>고객문의 : sellerking@moonklabs.com</p>
               <p className="mt-3 sm:mt-4 font-bold text-black/90">@ Moongclelabs Co., Ltd. All rights reserved.</p>
-            </div>
+</div>
+        </div>
         </div>
       </footer>
     </div>
