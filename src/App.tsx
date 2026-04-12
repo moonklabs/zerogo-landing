@@ -48,7 +48,7 @@ export default function App() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/apply", {
+      const response = await fetch("https://zerogo-apply-api.sellerking.workers.dev/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
