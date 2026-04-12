@@ -1,0 +1,6 @@
+name = "zerogo-apply-api"
+main = "src/index.ts"
+compatibility_date = "2024-04-12"
+
+[vars]
+GAS_AUTH_KEY = "my_zero098aidl_secret_123"
