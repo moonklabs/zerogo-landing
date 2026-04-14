@@ -4,6 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import fetch from "node-fetch";
+import fs from "fs";
+import matter from "gray-matter";
 
 dotenv.config();
 
@@ -56,6 +58,47 @@ async function startServer() {
       res.status(500).json({ error: "서버 연결에 실패했습니다. 네트워크 상태를 확인해주세요." });
     }
   });
+  // Blog API Routes
+  const BLOG_DIR = path.join(__dirname, "content/blog");
+
+  app.get("/api/posts", (req, res) => {
+    try {
+      if (!fs.existsSync(BLOG_DIR)) {
+        return res.json([]);
+      }
+      const files = fs.readdirSync(BLOG_DIR);
+      const posts = files
+        .filter((file) => file.endsWith(".md"))
+        .map((file) => {
+          const slug = file.replace(".md", "");
+          const content = fs.readFileSync(path.join(BLOG_DIR, file), "utf-8");
+          const { data } = matter(content);
+          return { slug, ...data };
+        })
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      res.status(500).json({ error: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/posts/:slug", (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      const content = fs.readFileSync(filePath, "utf-8");
+      const { data, content: body } = matter(content);
+      res.json({ slug, ...data, body });
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      res.status(500).json({ error: "Failed to fetch post" });
+    }
+  });
+
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
