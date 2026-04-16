@@ -55,7 +55,7 @@ export async function writePost(
   input: PostInput
 ): Promise<string> {
   const date = input.date ? new Date(input.date) : new Date();
-  const finalSlug = input.slug || generateSlug(date, input.title);
+  const finalSlug = slug || input.slug || generateSlug(date, input.title);
   
   const frontmatter = {
     title: input.title,
