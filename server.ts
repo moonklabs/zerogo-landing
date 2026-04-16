@@ -72,6 +72,25 @@ function triggerBuild() {
     });
   }).catch(console.error);
 }
+  
+function requireApiKey() {
+  return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    }
+    const key = authHeader.slice(7);
+    const { validateApiKey } = await import('./src/lib/api-keys.js');
+    const apiKey = validateApiKey(key);
+    if (!apiKey) {
+      return res.status(401).json({ error: 'Invalid or expired API key' });
+    }
+    (req as any).apiKey = apiKey;
+    next();
+  };
+}
+  
+
 
 async function startServer() {
   const app = express();
@@ -123,7 +142,7 @@ async function startServer() {
   const BLOG_DIR = path.join(__dirname, "content/blog");
 
   // POST /api/posts - Create new blog post
-  app.post("/api/posts", async (req, res) => {
+  app.post("/api/posts", requireApiKey(), async (req, res) => {
     try {
       const { title, description, body, date, slug } = req.body;
       
@@ -166,7 +185,7 @@ async function startServer() {
   });
 
   // PUT /api/posts/:slug - Update existing post
-  app.put("/api/posts/:slug", async (req, res) => {
+  app.put("/api/posts/:slug", requireApiKey(), async (req, res) => {
     try {
       const { slug } = req.params;
       const { title, description, body, date } = req.body;
@@ -219,7 +238,7 @@ async function startServer() {
   });
 
   // DELETE /api/posts/:slug - Delete post
-  app.delete("/api/posts/:slug", async (req, res) => {
+  app.delete("/api/posts/:slug", requireApiKey(), async (req, res) => {
     try {
       const { slug } = req.params;
       const filePath = path.join(BLOG_DIR, `${slug}.md`);
@@ -250,6 +269,54 @@ async function startServer() {
     } catch (error) {
       console.error("Error deleting post:", error);
       res.status(500).json({ error: "Failed to delete post" });
+    }
+  });
+
+  // API Key Management (admin only)
+  app.post('/api/keys', async (req, res) => {
+    try {
+      const { name } = req.body;
+      if (!name) {
+        return res.status(400).json({ error: 'name is required' });
+      }
+      const { createApiKey } = await import('./src/lib/api-keys.js');
+      const apiKey = await createApiKey(name);
+      res.status(201).json({
+        id: apiKey.id,
+        name: apiKey.name,
+        key: apiKey.key,
+        keyPrefix: apiKey.keyPrefix,
+        createdAt: apiKey.createdAt,
+      });
+    } catch (error) {
+      console.error('Error creating API key:', error);
+      res.status(500).json({ error: 'Failed to create API key' });
+    }
+  });
+
+  app.get('/api/keys', async (req, res) => {
+    try {
+      const { listApiKeys } = await import('./src/lib/api-keys.js');
+      const keys = listApiKeys();
+      res.json(keys);
+    } catch (error) {
+      console.error('Error listing API keys:', error);
+      res.status(500).json({ error: 'Failed to list API keys' });
+    }
+  });
+
+  app.delete('/api/keys/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { revokeApiKey } = await import('./src/lib/api-keys.js');
+      const success = revokeApiKey(id);
+      if (!success) {
+        return res.status(404).json({ error: 'API key not found' });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error revoking API key:', error);
+      res.status(500).json({ error: 'Failed to revoke API key' });
     }
   });
 
