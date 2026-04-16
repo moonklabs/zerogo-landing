@@ -56,6 +56,23 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Build trigger function (non-blocking)
+function triggerBuild() {
+  if (process.env.NODE_ENV === "production") {
+    // In production, CI handles the build
+    return;
+  }
+  
+  // In development, trigger async build
+  import("child_process").then(({ spawn }) => {
+    spawn("npx", ["tsx", "scripts/build-blog.ts"], {
+      cwd: __dirname,
+      stdio: "inherit",
+      detached: true,
+    });
+  }).catch(console.error);
+}
+
 async function startServer() {
   const app = express();
   const PORT = parseInt(process.env.PORT || "3001", 10);
@@ -105,6 +122,137 @@ async function startServer() {
   // Blog API Routes
   const BLOG_DIR = path.join(__dirname, "content/blog");
 
+  // POST /api/posts - Create new blog post
+  app.post("/api/posts", async (req, res) => {
+    try {
+      const { title, description, body, date, slug } = req.body;
+      
+      if (!title || !body) {
+        return res.status(400).json({ error: "title and body are required" });
+      }
+      
+      // Import content utilities
+      const { writePost, generateSlug, slugify } = await import("./src/lib/content.js");
+      const { upsertFile } = await import("./src/lib/github-client.js");
+      
+      // Generate slug
+      const postDate = date ? new Date(date) : new Date();
+      const finalSlug = slug || generateSlug(postDate, title);
+      
+      // Write to filesystem
+      const mdContent = matter.stringify(body, { title, date: postDate.toISOString(), description: description || "" });
+      const filePath = path.join(BLOG_DIR, `${finalSlug}.md`);
+      await fs.promises.writeFile(filePath, mdContent);
+      
+      // Sync to GitHub if configured
+      if (process.env.GITHUB_TOKEN) {
+        const github = {
+          owner: process.env.GITHUB_OWNER || "moonklabs",
+          repo: process.env.GITHUB_REPO || "zerogo-landing",
+          branch: process.env.GITHUB_BRANCH || "dev",
+          token: process.env.GITHUB_TOKEN,
+        };
+        await upsertFile(github, `content/blog/${finalSlug}.md`, mdContent, `Add blog post: ${title}`);
+      }
+      
+      // Trigger build (non-blocking)
+      triggerBuild();
+      
+      res.status(201).json({ success: true, slug: finalSlug });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({ error: "Failed to create post" });
+    }
+  });
+
+  // PUT /api/posts/:slug - Update existing post
+  app.put("/api/posts/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const { title, description, body, date } = req.body;
+      
+      if (!title || !body) {
+        return res.status(400).json({ error: "title and body are required" });
+      }
+      
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      // Read existing to preserve some metadata if needed
+      const existingContent = fs.readFileSync(filePath, "utf-8");
+      const existingMeta = matter(existingContent).data;
+      
+      // Write updated content
+      const postDate = date ? new Date(date) : new Date(existingMeta.date || new Date());
+      const mdContent = matter.stringify(body, {
+        title,
+        date: postDate.toISOString(),
+        description: description || existingMeta.description || "",
+      });
+      
+      await fs.promises.writeFile(filePath, mdContent);
+      
+      // Sync to GitHub if configured
+      if (process.env.GITHUB_TOKEN) {
+        const github = {
+          owner: process.env.GITHUB_OWNER || "moonklabs",
+          repo: process.env.GITHUB_REPO || "zerogo-landing",
+          branch: process.env.GITHUB_BRANCH || "dev",
+          token: process.env.GITHUB_TOKEN,
+        };
+        const { upsertFile } = await import("./src/lib/github-client.js");
+        await upsertFile(github, `content/blog/${slug}.md`, mdContent, `Update blog post: ${title}`);
+      }
+      
+      // Trigger build
+      triggerBuild();
+      
+      res.json({ success: true, slug });
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res.status(500).json({ error: "Failed to update post" });
+    }
+  });
+
+  // DELETE /api/posts/:slug - Delete post
+  app.delete("/api/posts/:slug", async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      // Delete from GitHub first
+      if (process.env.GITHUB_TOKEN) {
+        const github = {
+          owner: process.env.GITHUB_OWNER || "moonklabs",
+          repo: process.env.GITHUB_REPO || "zerogo-landing",
+          branch: process.env.GITHUB_BRANCH || "dev",
+          token: process.env.GITHUB_TOKEN,
+        };
+        const { deleteFile } = await import("./src/lib/github-client.js");
+        await deleteFile(github, `content/blog/${slug}.md`, `Delete blog post: ${slug}`);
+      }
+      
+      // Delete local file
+      await fs.promises.unlink(filePath);
+      
+      // Trigger build
+      triggerBuild();
+      
+      res.json({ success: true, slug });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json({ error: "Failed to delete post" });
+    }
+  });
+
   app.get("/api/posts", (req, res) => {
     try {
       if (!fs.existsSync(BLOG_DIR)) {
@@ -140,6 +288,77 @@ async function startServer() {
     } catch (error) {
       console.error("Error fetching post:", error);
       res.status(500).json({ error: "Failed to fetch post" });
+    }
+  });
+  app.post("/api/posts", (req, res) => {
+    try {
+      const { title, description, body, slug: customSlug } = req.body;
+      if (!title || !body) {
+        return res.status(400).json({ error: "Title and body are required" });
+      }
+      
+      const slug = customSlug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      
+      const content = matter.stringify(body, {
+        title,
+        description: description || '',
+        date: new Date().toISOString()
+      });
+      
+      if (!fs.existsSync(BLOG_DIR)) {
+        fs.mkdirSync(BLOG_DIR, { recursive: true });
+      }
+      fs.writeFileSync(filePath, content);
+      
+      res.status(201).json({ success: true, slug });
+    } catch (error) {
+      console.error("Error creating post:", error);
+      res.status(500).json({ error: "Failed to create post" });
+    }
+  });
+
+  app.put("/api/posts/:slug", (req, res) => {
+    try {
+      const { slug } = req.params;
+      const { title, description, body } = req.body;
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      const existingContent = fs.readFileSync(filePath, "utf-8");
+      const { data } = matter(existingContent);
+      
+      const newContent = matter.stringify(body, {
+        ...data,
+        ...(title && { title }),
+        ...(description !== undefined && { description }),
+      });
+      
+      fs.writeFileSync(filePath, newContent);
+      res.json({ success: true, slug });
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res.status(500).json({ error: "Failed to update post" });
+    }
+  });
+
+  app.delete("/api/posts/:slug", (req, res) => {
+    try {
+      const { slug } = req.params;
+      const filePath = path.join(BLOG_DIR, `${slug}.md`);
+      
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Post not found" });
+      }
+      
+      fs.unlinkSync(filePath);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json({ error: "Failed to delete post" });
     }
   });
 
