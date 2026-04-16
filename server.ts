@@ -147,6 +147,77 @@ async function startServer() {
   const publicDir = path.join(__dirname, "public");
 
   if (process.env.NODE_ENV !== "production") {
+    const GITHUB_CLIENT_ID = process.env.DECAP_GITHUB_CLIENT_ID;
+    const GITHUB_CLIENT_SECRET = process.env.DECAP_GITHUB_CLIENT_SECRET;
+
+    // Serve config.yml dynamically to inject correct base_url per environment
+    app.get("/admin/config.yml", (req, res) => {
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      const config = `local_backend: true
+
+backend:
+  name: github
+  repo: moonklabs/zerogo-landing
+  branch: main
+  base_url: ${baseUrl}
+  auth_endpoint: /api/auth
+
+media_folder: "public/images/blog"
+public_folder: "/images/blog"
+
+collections:
+  - name: "blog"
+    label: "Blog"
+    folder: "content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Publish Date", name: "date", widget: "datetime" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Body", name: "body", widget: "markdown" }
+`;
+      res.type("text/yaml").send(config);
+    });
+
+    // GitHub OAuth proxy
+    app.get("/api/auth", (req, res) => {
+      if (!GITHUB_CLIENT_ID) {
+        return res.status(500).send("GITHUB_CLIENT_ID not configured");
+      }
+      const params = new URLSearchParams({
+        client_id: GITHUB_CLIENT_ID,
+        scope: "repo,user",
+        state: Math.random().toString(36).substring(2),
+      });
+      res.redirect(`https://github.com/login/oauth/authorize?${params}`);
+    });
+
+    app.get("/api/auth/callback", async (req, res) => {
+      const { code } = req.query;
+      if (!code || typeof code !== "string") {
+        return res.send(oauthCallbackHtml(null, "No authorization code provided"));
+      }
+      if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+        return res.send(oauthCallbackHtml(null, "GitHub OAuth not configured"));
+      }
+      try {
+        const response = await fetch("https://github.com/login/oauth/access_token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ client_id: GITHUB_CLIENT_ID, client_secret: GITHUB_CLIENT_SECRET, code }),
+        });
+        const data = (await response.json()) as { access_token?: string; error?: string };
+        if (data.access_token) {
+          res.send(oauthCallbackHtml(data.access_token, null));
+        } else {
+          res.send(oauthCallbackHtml(null, data.error ?? "Token exchange failed"));
+        }
+      } catch {
+        res.send(oauthCallbackHtml(null, "Token exchange failed"));
+      }
+    });
+
     app.use(express.static(publicDir));
     app.get("/admin", (req, res) => {
       res.sendFile(path.join(publicDir, "admin", "index.html"));
@@ -179,6 +250,29 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
+}
+
+function oauthCallbackHtml(token: string | null, error: string | null): string {
+  const provider = "github";
+  const message = token
+    ? `authorization:${provider}:success:${JSON.stringify({ token, provider })}`
+    : `authorization:${provider}:error:${error ?? "Unknown error"}`;
+  return `<!DOCTYPE html>
+<html>
+<head><title>Authenticating...</title></head>
+<body>
+<script>
+(function() {
+  var message = ${JSON.stringify(message)};
+  function receiveMessage(e) {
+    window.opener.postMessage(message, e.origin);
+  }
+  window.addEventListener("message", receiveMessage, false);
+  window.opener.postMessage("authorizing:${provider}", "*");
+})();
+</script>
+</body>
+</html>`;
 }
 
 startServer();

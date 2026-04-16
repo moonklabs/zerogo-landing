@@ -1,9 +1,8 @@
-local_backend: true
-
 backend:
   name: github
-  repo: "placeholder/repo"
+  repo: moonklabs/zerogo-landing
   branch: main
+  base_url: https://zerogo-decap-oauth.sellerking.workers.dev
 
 media_folder: "public/images/blog"
 public_folder: "/images/blog"
