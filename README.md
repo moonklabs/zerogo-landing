@@ -80,6 +80,36 @@ Express 서버가 개발/운영 호스트 역할을 겸합니다:
 - `GET /api/posts` → `content/blog/*.md` 파일 목록 반환 (날짜순 정렬)
 - `GET /api/posts/:slug` → 단일 마크다운 포스트 반환
 
+### Content API (External Agent Integration)
+
+The Content API allows external AI agents to create, update, and delete blog posts via REST API.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/posts` | Create new blog post |
+| GET | `/api/posts` | List all posts |
+| GET | `/api/posts/:slug` | Get single post |
+| PUT | `/api/posts/:slug` | Update post |
+| DELETE | `/api/posts/:slug` | Delete post |
+
+For full documentation, see [docs/CONTENT-API.md](docs/CONTENT-API.md).
+
+**Setup for external agents:**
+```bash
+# .env for external agent
+GITHUB_TOKEN=ghp_your_personal_access_token
+GITHUB_OWNER=moonklabs
+GITHUB_REPO=zerogo-landing
+GITHUB_BRANCH=dev
+```
+
+**Example usage:**
+```bash
+curl -X POST http://localhost:3001/api/posts \
+  -H "Content-Type: application/json" \
+  -d '{"title": "AI Post", "body": "# Hello\n\nContent"}'
+```
+
 **어드민 (비운영 환경 전용)**:
 - `GET /admin/config.yml` → Decap CMS 설정을 동적 생성 (환경에 맞는 `base_url` 주입)
 - `GET /api/auth` → GitHub OAuth 리다이렉트
@@ -178,6 +208,8 @@ GitHub Actions 탭 → 워크플로우 선택 → **Run workflow** 버튼으로 
 | `CLOUDFLARE_ACCOUNT_ID` | Secret | Cloudflare 계정 ID |
 | `AWS_REGION` | Variable | AWS 리전 (예: `ap-northeast-2`) |
 | `AMPLIFY_APP_ID` | Variable | Amplify 앱 ID |
+| `AMPLIFY_BRANCH` | Variable | Amplify 배포 브랜치 (예: `main`, `dev`) |
+| `GITHUB_TOKEN` | Secret | Content API 연동용 GitHub PAT |
 
 ---
 
