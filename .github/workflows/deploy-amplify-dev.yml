@@ -63,7 +63,7 @@ jobs:
       - name: Build static export
         run: |
           npm run build
-          npx tsx scripts/build-blog.ts
+          npm run postbuild
           test -f dist/index.html
           test -f dist/api/posts/index.json || { echo "ERROR: Blog index.json not generated"; exit 1; }
           cd dist

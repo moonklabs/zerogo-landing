@@ -54,6 +54,7 @@ jobs:
       - name: Build static export
         run: |
           npm run build
+          npm run postbuild
           test -f dist/index.html
           cd dist
           zip -r ../site.zip .
