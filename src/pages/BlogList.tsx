@@ -1,22 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { fetchPosts, type PostMeta } from "../lib/api";
 
 const LOGO_URL = "https://cdn.prod.website-files.com/6523c202a6a9763a268a7a7d/69d8eb3622c77fc93875d989_logo-zerogo-black.png";
 
-interface Post {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-}
-
 export default function BlogList() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostMeta[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/posts")
-      .then((res) => res.json())
+    fetchPosts()
       .then((data) => {
         setPosts(data);
         setLoading(false);

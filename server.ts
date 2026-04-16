@@ -7,6 +7,50 @@ import fetch from "node-fetch";
 import fs from "fs";
 import matter from "gray-matter";
 
+// Slack notification helper
+async function sendSlackNotification(payload: { name: string; email: string; channel: string }) {
+  const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+  if (!SLACK_WEBHOOK_URL) {
+    console.warn("SLACK_WEBHOOK_URL not configured, skipping Slack notification");
+    return;
+  }
+
+  const timestamp = new Date().toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  const channelLabel = payload.channel === "instagram" ? "인스타그램" : "네이버 지식인";
+
+  const slackBody = {
+    text: `🎉 새 사전 신청!`,
+    blocks: [
+      {
+        type: "header",
+        text: { type: "plain_text", text: "🎉 새 사전 신청!", emoji: true }
+      },
+      {
+        type: "section",
+        fields: [
+          { type: "mrkdwn", text: `*이름:*\n${payload.name}` },
+          { type: "mrkdwn", text: `*이메일:*\n${payload.email}` },
+          { type: "mrkdwn", text: `*채널:*\n${channelLabel}` },
+          { type: "mrkdwn", text: `*신청시간:*\n${timestamp}` }
+        ]
+      }
+    ]
+  };
+
+  try {
+    const response = await fetch(SLACK_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(slackBody),
+    });
+    if (!response.ok) {
+      console.error("Slack notification failed:", await response.text());
+    }
+  } catch (error) {
+    console.error("Slack notification error:", error);
+  }
+}
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -32,9 +76,7 @@ async function startServer() {
 
       const response = await fetch(GAS_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           auth_key: AUTH_KEY,
           name,
@@ -48,6 +90,8 @@ async function startServer() {
       const responseText = await response.text();
 
       if (response.ok || responseText.includes("성공")) {
+        // Send Slack notification (non-blocking)
+        sendSlackNotification({ name, email, channel });
         res.json({ success: true });
       } else {
         console.error("GAS Error Response:", responseText);
@@ -99,6 +143,23 @@ async function startServer() {
     }
   });
 
+
+  const publicDir = path.join(__dirname, "public");
+
+  if (process.env.NODE_ENV !== "production") {
+    app.use(express.static(publicDir));
+    app.get("/admin", (req, res) => {
+      res.sendFile(path.join(publicDir, "admin", "index.html"));
+    });
+    app.get("/admin/*", (req, res) => {
+      res.sendFile(path.join(publicDir, "admin", "index.html"));
+    });
+  } else {
+    // Serve public assets except admin/ in production
+    app.use(express.static(publicDir, { index: false }));
+    app.get("/admin", (req, res) => res.status(404).end());
+    app.get("/admin/*", (req, res) => res.status(404).end());
+  }
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

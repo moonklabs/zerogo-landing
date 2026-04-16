@@ -1,7 +1,8 @@
 local_backend: true
 
 backend:
-  name: git-gateway
+  name: github
+  repo: "placeholder/repo"
   branch: main
 
 media_folder: "public/images/blog"

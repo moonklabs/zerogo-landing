@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { fetchPost, type Post } from "../lib/api";
 
 const LOGO_URL = "https://cdn.prod.website-files.com/6523c202a6a9763a268a7a7d/69d8eb3622c77fc93875d989_logo-zerogo-black.png";
-
-interface Post {
-  slug: string;
-  title: string;
-  date: string;
-  description: string;
-  body: string;
-}
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -18,8 +11,8 @@ export default function BlogPost() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/posts/${slug}`)
-      .then((res) => res.json())
+    if (!slug) return;
+    fetchPost(slug)
       .then((data) => {
         setPost(data);
         setLoading(false);
