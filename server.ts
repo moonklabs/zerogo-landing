@@ -89,6 +89,24 @@ function requireApiKey() {
     next();
   };
 }
+
+function requireAdminToken() {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const adminToken = process.env.ADMIN_TOKEN;
+    if (!adminToken) {
+      const host = req.get('host') || '';
+      if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
+        return res.status(503).json({ error: 'Admin endpoints not configured' });
+      }
+      return next();
+    }
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ') || authHeader.slice(7) !== adminToken) {
+      return res.status(401).json({ error: 'Admin token required' });
+    }
+    next();
+  };
+}
   
 
 
@@ -273,7 +291,7 @@ async function startServer() {
   });
 
   // API Key Management (admin only)
-  app.post('/api/keys', async (req, res) => {
+  app.post('/api/keys', requireAdminToken(), async (req, res) => {
     try {
       const { name } = req.body;
       if (!name) {
@@ -294,7 +312,7 @@ async function startServer() {
     }
   });
 
-  app.get('/api/keys', async (req, res) => {
+  app.get('/api/keys', requireAdminToken(), async (req, res) => {
     try {
       const { listApiKeys } = await import('./src/lib/api-keys.js');
       const keys = listApiKeys();
@@ -305,7 +323,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/keys/:id', async (req, res) => {
+  app.delete('/api/keys/:id', requireAdminToken(), async (req, res) => {
     try {
       const { id } = req.params;
       const { revokeApiKey } = await import('./src/lib/api-keys.js');
@@ -357,79 +375,6 @@ async function startServer() {
       res.status(500).json({ error: "Failed to fetch post" });
     }
   });
-  app.post("/api/posts", (req, res) => {
-    try {
-      const { title, description, body, slug: customSlug } = req.body;
-      if (!title || !body) {
-        return res.status(400).json({ error: "Title and body are required" });
-      }
-      
-      const slug = customSlug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-      const filePath = path.join(BLOG_DIR, `${slug}.md`);
-      
-      const content = matter.stringify(body, {
-        title,
-        description: description || '',
-        date: new Date().toISOString()
-      });
-      
-      if (!fs.existsSync(BLOG_DIR)) {
-        fs.mkdirSync(BLOG_DIR, { recursive: true });
-      }
-      fs.writeFileSync(filePath, content);
-      
-      res.status(201).json({ success: true, slug });
-    } catch (error) {
-      console.error("Error creating post:", error);
-      res.status(500).json({ error: "Failed to create post" });
-    }
-  });
-
-  app.put("/api/posts/:slug", (req, res) => {
-    try {
-      const { slug } = req.params;
-      const { title, description, body } = req.body;
-      const filePath = path.join(BLOG_DIR, `${slug}.md`);
-      
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      
-      const existingContent = fs.readFileSync(filePath, "utf-8");
-      const { data } = matter(existingContent);
-      
-      const newContent = matter.stringify(body, {
-        ...data,
-        ...(title && { title }),
-        ...(description !== undefined && { description }),
-      });
-      
-      fs.writeFileSync(filePath, newContent);
-      res.json({ success: true, slug });
-    } catch (error) {
-      console.error("Error updating post:", error);
-      res.status(500).json({ error: "Failed to update post" });
-    }
-  });
-
-  app.delete("/api/posts/:slug", (req, res) => {
-    try {
-      const { slug } = req.params;
-      const filePath = path.join(BLOG_DIR, `${slug}.md`);
-      
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      
-      fs.unlinkSync(filePath);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      res.status(500).json({ error: "Failed to delete post" });
-    }
-  });
-
-
   const publicDir = path.join(__dirname, "public");
 
   if (process.env.NODE_ENV !== "production") {
@@ -438,13 +383,19 @@ async function startServer() {
 
     // Serve config.yml dynamically to inject correct base_url per environment
     app.get("/admin/config.yml", (req, res) => {
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
-      const config = `local_backend: true
+      const host = req.get("host") || "";
+      const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1");
+      const forceLocal = req.query.local;
+      const useLocalBackend = forceLocal !== undefined 
+        ? forceLocal === "true" 
+        : isLocalhost;
 
+      const baseUrl = `${req.protocol}://${host}`;
+      const config = `${useLocalBackend ? "local_backend: true\n" : ""}
 backend:
   name: github
   repo: moonklabs/zerogo-landing
-  branch: main
+  branch: dev
   base_url: ${baseUrl}
   auth_endpoint: /api/auth
 

@@ -1,22 +1,41 @@
-import { test, expect, request } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-const API_BASE = 'http://127.0.0.1:3001';
+const PORT = process.env.PORT || '3001';
+const API_BASE = `http://127.0.0.1:${PORT}`;
 
 test.describe('Content API E2E', () => {
-  let authToken: string | null = null;
+  let apiKey: string = '';
+  let apiKeyId: string = '';
   const testSlugs: string[] = [];
 
-  test.beforeAll(async () => {
-    // Ensure dev server is running (assume it's already running)
-    // In CI, you would start it as part of the test setup
+  test.beforeAll(async ({ request }) => {
+    const adminToken = process.env.ADMIN_TOKEN;
+    const headers = adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {};
+    const response = await request.post(`${API_BASE}/api/keys`, {
+      headers,
+      data: { name: 'E2E Test Key' }
+    });
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    apiKey = body.key;
+    apiKeyId = body.id;
   });
 
-  test.afterAll(async () => {
+  test.afterAll(async ({ request }) => {
+    if (apiKeyId) {
+      const adminToken = process.env.ADMIN_TOKEN;
+      const headers = adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {};
+      const response = await request.delete(`${API_BASE}/api/keys/${apiKeyId}`, { headers });
+      expect(response.ok()).toBe(true);
+    }
   });
 
   test.describe('POST /api/posts', () => {
     test('should create a new blog post', async ({ request }) => {
       const response = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'E2E Test Post',
           description: 'This is a test post created by Playwright',
@@ -36,6 +55,9 @@ test.describe('Content API E2E', () => {
 
     test('should reject post without title', async ({ request }) => {
       const response = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           body: 'Content without title',
         },
@@ -46,6 +68,9 @@ test.describe('Content API E2E', () => {
 
     test('should reject post without body', async ({ request }) => {
       const response = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Title Only',
         },
@@ -56,6 +81,9 @@ test.describe('Content API E2E', () => {
 
     test('should create post with custom slug', async ({ request }) => {
       const response = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Custom Slug Post',
           slug: 'e2e-custom-slug-test',
@@ -105,6 +133,9 @@ test.describe('Content API E2E', () => {
 
     test('should return full post content', async ({ request }) => {
       const createRes = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Content Test Post',
           description: 'For content retrieval test',
@@ -129,6 +160,9 @@ test.describe('Content API E2E', () => {
   test.describe('PUT /api/posts/:slug', () => {
     test('should update existing post', async ({ request }) => {
       const createRes = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Original Title',
           body: 'Original content',
@@ -139,6 +173,9 @@ test.describe('Content API E2E', () => {
       testSlugs.push(slug);
       
       const updateRes = await request.put(`${API_BASE}/api/posts/${slug}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Updated Title',
           body: 'Updated content',
@@ -156,6 +193,9 @@ test.describe('Content API E2E', () => {
 
     test('should return 404 for non-existent post', async ({ request }) => {
       const response = await request.put(`${API_BASE}/api/posts/nonexistent-post`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Test',
           body: 'Content',
@@ -169,6 +209,9 @@ test.describe('Content API E2E', () => {
   test.describe('DELETE /api/posts/:slug', () => {
     test('should delete existing post', async ({ request }) => {
       const createRes = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'To Be Deleted',
           body: 'This will be deleted',
@@ -177,7 +220,11 @@ test.describe('Content API E2E', () => {
       
       const { slug } = await createRes.json();
       
-      const deleteRes = await request.delete(`${API_BASE}/api/posts/${slug}`);
+      const deleteRes = await request.delete(`${API_BASE}/api/posts/${slug}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
       expect(deleteRes.ok()).toBe(true);
       
       const getRes = await request.get(`${API_BASE}/api/posts/${slug}`);
@@ -187,15 +234,63 @@ test.describe('Content API E2E', () => {
     });
 
     test('should return 404 for non-existent post', async ({ request }) => {
-      const response = await request.delete(`${API_BASE}/api/posts/nonexistent-post`);
+      const response = await request.delete(`${API_BASE}/api/posts/nonexistent-post`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
       
       expect(response.status()).toBe(404);
+    });
+  });
+
+  test.describe('Authentication', () => {
+    test('should return 401 when no auth header on POST /api/posts', async ({ request }) => {
+      const response = await request.post(`${API_BASE}/api/posts`, {
+        data: { title: 'No Auth', body: 'content' },
+      });
+      expect(response.status()).toBe(401);
+    });
+
+    test('should return 401 for invalid API key on POST /api/posts', async ({ request }) => {
+      const response = await request.post(`${API_BASE}/api/posts`, {
+        headers: { 'Authorization': 'Bearer zgo_invalidkeyinvalidkeyinvalidkeyinvalidkeyinval' },
+        data: { title: 'Bad Key', body: 'content' },
+      });
+      expect(response.status()).toBe(401);
+    });
+
+    test('should return 401 when no auth header on PUT /api/posts/:slug', async ({ request }) => {
+      const response = await request.put(`${API_BASE}/api/posts/some-slug`, {
+        data: { title: 'No Auth', body: 'content' },
+      });
+      expect(response.status()).toBe(401);
+    });
+
+    test('should return 401 when no auth header on DELETE /api/posts/:slug', async ({ request }) => {
+      const response = await request.delete(`${API_BASE}/api/posts/some-slug`);
+      expect(response.status()).toBe(401);
+    });
+
+    test('should return 401 when creating key without admin token (if ADMIN_TOKEN is set)', async ({ request }) => {
+      const adminToken = process.env.ADMIN_TOKEN;
+      if (!adminToken) {
+        test.skip();
+        return;
+      }
+      const response = await request.post(`${API_BASE}/api/keys`, {
+        data: { name: 'Unauthorized Key' },
+      });
+      expect(response.status()).toBe(401);
     });
   });
 
   test.describe('Full Content Lifecycle', () => {
     test('should handle create -> read -> update -> delete flow', async ({ request }) => {
       const createRes = await request.post(`${API_BASE}/api/posts`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Lifecycle Test Post',
           description: 'Testing full CRUD lifecycle',
@@ -214,6 +309,9 @@ test.describe('Content API E2E', () => {
       expect(post.body).toContain('Initial Content');
       
       const updateRes = await request.put(`${API_BASE}/api/posts/${slug}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
         data: {
           title: 'Lifecycle Test Post (Updated)',
           body: '# Updated Content\n\nThis is the updated content.',
@@ -226,7 +324,11 @@ test.describe('Content API E2E', () => {
       expect(post.title).toBe('Lifecycle Test Post (Updated)');
       expect(post.body).toContain('Updated Content');
       
-      const deleteRes = await request.delete(`${API_BASE}/api/posts/${slug}`);
+      const deleteRes = await request.delete(`${API_BASE}/api/posts/${slug}`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
       expect(deleteRes.ok()).toBe(true);
       
       const getRes = await request.get(`${API_BASE}/api/posts/${slug}`);

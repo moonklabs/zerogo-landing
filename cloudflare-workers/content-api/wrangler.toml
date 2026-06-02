@@ -1,0 +1,12 @@
+name = "zerogo-content-api"
+main = "src/index.ts"
+compatibility_date = "2024-04-12"
+
+[vars]
+GITHUB_OWNER = "moonklabs"
+GITHUB_REPO = "zerogo-landing"
+GITHUB_BRANCH = "dev"
+
+# Secrets required (set via wrangler secret):
+# GITHUB_TOKEN - GitHub Personal Access Token
+# API_KEYS_JSON - JSON array of hashed API keys

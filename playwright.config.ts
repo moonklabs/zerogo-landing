@@ -12,7 +12,7 @@ export default defineConfig({
     ['list'],
   ],
   use: {
-    baseURL: 'http://127.0.0.1:3001',
+    baseURL: `http://127.0.0.1:${process.env.PORT || '3001'}`,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -23,9 +23,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:3001',
+    command: `PORT=${process.env.PORT || '3001'} npx tsx server.ts`,
+    url: `http://127.0.0.1:${process.env.PORT || '3001'}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 30 * 1000,
   },
 });

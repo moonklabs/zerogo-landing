@@ -1,4 +1,10 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface ApiKey {
   id: string;
@@ -24,18 +30,14 @@ const DB_PATH = process.env.NODE_ENV === 'production'
 
 function getDbPath(): string {
   if (DB_PATH) return DB_PATH;
-  const { fileURLToPath } = require('url');
-  const { dirname } = require('path');
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  return require('path').join(__dirname, '../../api-keys.json');
+  return path.join(__dirname, '../../api-keys.json');
 }
 
 function loadKeys(): ApiKey[] {
   try {
-    const fs = require('fs');
-    const path = getDbPath();
-    if (fs.existsSync(path)) {
-      const data = fs.readFileSync(path, 'utf-8');
+    const keyPath = getDbPath();
+    if (fs.existsSync(keyPath)) {
+      const data = fs.readFileSync(keyPath, 'utf-8');
       const parsed = JSON.parse(data);
       return parsed.map((k: ApiKey) => ({
         ...k,
@@ -50,13 +52,12 @@ function loadKeys(): ApiKey[] {
 }
 
 function saveKeys(keys: ApiKey[]): void {
-  const fs = require('fs');
-  const path = getDbPath();
-  const dir = require('path').dirname(path);
+  const keyPath = getDbPath();
+  const dir = path.dirname(keyPath);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  fs.writeFileSync(path, JSON.stringify(keys, null, 2));
+  fs.writeFileSync(keyPath, JSON.stringify(keys, null, 2));
 }
 
 export function generateApiKey(): { key: string; keyHash: string; keyPrefix: string } {
@@ -71,12 +72,12 @@ export function hashKey(key: string): string {
 }
 
 export function validateKeyFormat(key: string): boolean {
-  return key.startsWith('zgo_') && key.length === 51;
+  return key.startsWith('zgo_') && key.length === 52;
 }
 
 export async function createApiKey(name: string): Promise<ApiKeyWithSecret> {
   const { key, keyHash, keyPrefix } = generateApiKey();
-  
+
   const apiKey: ApiKey = {
     id: crypto.randomUUID(),
     name,
@@ -85,11 +86,11 @@ export async function createApiKey(name: string): Promise<ApiKeyWithSecret> {
     createdAt: new Date(),
     isActive: true,
   };
-  
+
   const keys = loadKeys();
   keys.push(apiKey);
   saveKeys(keys);
-  
+
   return { ...apiKey, key };
 }
 
@@ -97,28 +98,28 @@ export function validateApiKey(key: string): ApiKey | null {
   if (!validateKeyFormat(key)) {
     return null;
   }
-  
+
   const keyHash = hashKey(key);
   const keys = loadKeys();
   const apiKey = keys.find(k => k.isActive && k.keyHash === keyHash);
-  
+
   if (apiKey) {
     apiKey.lastUsedAt = new Date();
     saveKeys(keys);
     return apiKey;
   }
-  
+
   return null;
 }
 
 export function revokeApiKey(id: string): boolean {
   const keys = loadKeys();
   const index = keys.findIndex(k => k.id === id);
-  
+
   if (index === -1) {
     return false;
   }
-  
+
   keys[index].isActive = false;
   saveKeys(keys);
   return true;
