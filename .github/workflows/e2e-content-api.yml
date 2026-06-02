@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 env:
   AWS_REGION: ${{ vars.AWS_REGION }}
@@ -20,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout dev
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           ref: dev
           fetch-depth: 0
@@ -45,12 +44,12 @@ jobs:
       - name: Generate ephemeral API key
         id: genkey
         run: |
-          OUTPUT=$(npx tsx scripts/gen-key.ts e2e-run)
-          KEY=$(echo "$OUTPUT" | grep -A1 "평문 키" | tail -1 | xargs)
-          HASH=$(echo "$OUTPUT" | grep -A1 "SHA-256 해시" | tail -1 | xargs)
+          KEY="zgo_$(openssl rand -hex 24)"
+          HASH=$(printf '%s' "$KEY" | openssl dgst -sha256 | awk '{print $2}')
           echo "::add-mask::$KEY"
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "Key generated, hash prefix: ${HASH:0:8}"
 
       - name: Set API_KEYS_JSON on worker
         working-directory: ./cloudflare-workers/content-api
@@ -85,11 +84,12 @@ jobs:
             -d '{
               "title": "Cloudflare Worker API 발행 테스트",
               "description": "Content API Worker E2E 검증",
-              "body": "# Cloudflare Worker API 발행 테스트\n\n이 포스트는 Cloudflare Content Worker API를 통해 생성됐습니다.\n\n**흐름:** `POST /api/posts` → Worker → GitHub dev 커밋 → Amplify → dev.zerogo.ai/blog"
+              "body": "# Cloudflare Worker API 발행 테스트\n\n이 포스트는 Cloudflare Content Worker API를 통해 생성됐습니다.\n\n**흐름:** POST /api/posts → Worker → GitHub dev 커밋 → Amplify → dev.zerogo.ai/blog"
             }')
           HTTP_CODE=$(echo "$RESPONSE" | tail -1)
           BODY=$(echo "$RESPONSE" | head -1)
-          echo "HTTP: $HTTP_CODE  Body: $BODY"
+          echo "HTTP: $HTTP_CODE"
+          echo "Body: $BODY"
           if [ "$HTTP_CODE" != "201" ]; then
             echo "ERROR: Expected 201, got $HTTP_CODE"
             exit 1
@@ -101,12 +101,10 @@ jobs:
       - name: Pull worker commit and build
         run: |
           git pull origin dev
-          echo "=== content/blog/ ==="
           ls content/blog/ | tail -5
           npm run build
           npm run postbuild
           test -f dist/api/posts/index.json
-          echo "=== Posts in build ==="
           python3 -c "import json; [print(p['slug']) for p in json.load(open('dist/api/posts/index.json'))]"
           cd dist && zip -r ../site.zip .
 
@@ -124,9 +122,10 @@ jobs:
 
       - name: Wait for Amplify
         run: |
+          JOB_ID="${{ steps.deploy.outputs.job_id }}"
           for i in $(seq 1 60); do
             S=$(aws amplify get-job --app-id "$AMPLIFY_APP_ID" \
-              --branch-name "$AMPLIFY_BRANCH" --job-id "${{ steps.deploy.outputs.job_id }}" \
+              --branch-name "$AMPLIFY_BRANCH" --job-id "$JOB_ID" \
               --query 'job.summary.status' --output text)
             echo "[$i/60] $S"
             case "$S" in SUCCEED) exit 0 ;; FAILED|CANCELLED) exit 1 ;; esac
@@ -143,6 +142,6 @@ import json,sys
 posts=json.load(sys.stdin)
 slug='$SLUG'
 found=slug in [p['slug'] for p in posts]
-print(f'SUCCESS: {slug} live!' if found else f'FAILED: {slug} not found')
+print('SUCCESS: ' + slug + ' live!' if found else 'FAILED: ' + slug + ' not found')
 exit(0 if found else 1)
 "; then echo "E2E PASSED"; else exit 1; fi
