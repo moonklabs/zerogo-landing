@@ -3,7 +3,7 @@ backend:
   repo: moonklabs/zerogo-landing
   branch: dev
   base_url: https://zerogo-decap-oauth.sellerking.workers.dev
-  use_graphql: true
+  use_graphql: false
 
 media_folder: "public/images/blog"
 public_folder: "/images/blog"
