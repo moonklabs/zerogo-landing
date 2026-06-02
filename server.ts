@@ -123,6 +123,7 @@ async function startServer() {
           const { data } = matter(content);
           return { slug, ...data };
         })
+        .filter((post: any) => !post.draft)
         .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
       res.json(posts);
     } catch (error) {
