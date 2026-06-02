@@ -43,9 +43,11 @@ export function buildMarkdown(
   date: string,
   description: string,
   body: string,
+  draft?: boolean,
 ): string {
   const esc = (s: string): string => s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  return `---\ntitle: "${esc(title)}"\ndate: "${date}"\ndescription: "${esc(description)}"\n---\n\n${body}`;
+  const draftLine = draft ? '\ndraft: true' : '';
+  return `---\ntitle: "${esc(title)}"\ndate: "${date}"\ndescription: "${esc(description)}"${draftLine}\n---\n\n${body}`;
 }
 
 export function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
@@ -246,8 +248,8 @@ export default {
       try { body = await request.json() as Record<string, unknown>; }
       catch { return json({ error: 'Invalid JSON body' }, 400); }
 
-      const { title, description, body: postBody, date, slug: customSlug } = body as {
-        title?: string; description?: string; body?: string; date?: string; slug?: string;
+      const { title, description, body: postBody, date, slug: customSlug, draft } = body as {
+        title?: string; description?: string; body?: string; date?: string; slug?: string; draft?: boolean;
       };
       if (!title || !postBody) {
         return json({ error: 'title and body are required' }, 400);
@@ -255,7 +257,7 @@ export default {
 
       const postDate = date ? new Date(date) : new Date();
       const slug = customSlug ?? generateSlug(postDate, title);
-      const mdContent = buildMarkdown(title, postDate.toISOString(), description ?? '', postBody);
+      const mdContent = buildMarkdown(title, postDate.toISOString(), description ?? '', postBody, draft);
 
       try {
         await upsertFile(cfg, `content/blog/${slug}.md`, mdContent, `Add blog post: ${title}`);
@@ -271,8 +273,8 @@ export default {
       try { body = await request.json() as Record<string, unknown>; }
       catch { return json({ error: 'Invalid JSON body' }, 400); }
 
-      const { title, description, body: postBody, date } = body as {
-        title?: string; description?: string; body?: string; date?: string;
+      const { title, description, body: postBody, date, draft } = body as {
+        title?: string; description?: string; body?: string; date?: string; draft?: boolean;
       };
       if (!title || !postBody) {
         return json({ error: 'title and body are required' }, 400);
@@ -283,11 +285,13 @@ export default {
 
       const { data: existing } = parseFrontmatter(existingRaw);
       const postDate = date ? new Date(date) : new Date(existing.date ?? new Date().toISOString());
+      const keepDraft = draft !== undefined ? draft : existing.draft === 'true';
       const mdContent = buildMarkdown(
         title,
         postDate.toISOString(),
         description ?? existing.description ?? '',
         postBody,
+        keepDraft,
       );
 
       try {

@@ -38,6 +38,7 @@ for (const file of files) {
       console.warn(`Warning: ${file} is missing required frontmatter (title, date) — skipping`);
       continue;
     }
+    const isDraft = data.draft === true;
     const post: Post = {
       slug,
       title: String(data.title),
@@ -45,8 +46,8 @@ for (const file of files) {
       description: String(data.description ?? ""),
       body,
     };
-    posts.push({ slug: post.slug, title: post.title, date: post.date, description: post.description });
     fs.writeFileSync(path.join(OUT_DIR, `${slug}.json`), JSON.stringify(post));
+    if (!isDraft) posts.push({ slug: post.slug, title: post.title, date: post.date, description: post.description });
   } catch (err) {
     console.warn(`Warning: failed to parse ${file} — skipping. Error: ${err}`);
   }
