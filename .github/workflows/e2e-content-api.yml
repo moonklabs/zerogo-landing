@@ -28,6 +28,13 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -39,7 +46,100 @@ jobs:
           echo "::add-mask::$KEY"
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           echo "hash=$HASH" >> "$GITHUB_OUTPUT"
-          echo "Key generated OK"
+          echo "Key generated, hash prefix: ${HASH:0:8}"
 
-      - name: Report success
-        run: echo "Steps OK. Key prefix = ${{ steps.genkey.outputs.hash }}"
+      - name: Set API_KEYS_JSON on worker
+        working-directory: ./cloudflare-workers/content-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KEY_HASH: ${{ steps.genkey.outputs.hash }}
+        run: |
+          npm ci
+          printf '%s' "[\"$KEY_HASH\"]" \
+            | npx wrangler@3 secret put API_KEYS_JSON --name zerogo-content-api
+
+      - name: Set GITHUB_TOKEN on worker
+        working-directory: ./cloudflare-workers/content-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_TOKEN_FOR_WORKER: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GH_TOKEN_FOR_WORKER" \
+            | npx wrangler@3 secret put GITHUB_TOKEN --name zerogo-content-api
+
+      - name: Create blog post via Cloudflare Content API
+        id: create_post
+        env:
+          API_KEY: ${{ steps.genkey.outputs.key }}
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://zerogo-content-api.sellerking.workers.dev/api/posts" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"title":"Cloudflare Worker API 발행 테스트","description":"Content API Worker E2E 검증","body":"# Cloudflare Worker API 발행 테스트\n\n이 포스트는 Cloudflare Content Worker API를 통해 생성됐습니다."}')
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+          echo "HTTP: $HTTP_CODE"
+          echo "Body: $BODY"
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "ERROR: Expected 201, got $HTTP_CODE"
+            exit 1
+          fi
+          SLUG=$(echo "$BODY" | python3 -c "import json,sys; print(json.load(sys.stdin)['slug'])")
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+          echo "Created: $SLUG"
+
+      - name: Pull worker commit and build
+        run: |
+          git pull origin dev
+          ls content/blog/ | tail -5
+          npm run build
+          npm run postbuild
+          test -f dist/api/posts/index.json
+          python3 -c "import json; [print(p['slug']) for p in json.load(open('dist/api/posts/index.json'))]"
+          cd dist && zip -r ../site.zip .
+
+      - name: Deploy to Amplify
+        id: deploy
+        run: |
+          DJ=$(aws amplify create-deployment \
+            --app-id "$AMPLIFY_APP_ID" --branch-name "$AMPLIFY_BRANCH")
+          JOB_ID=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["jobId"])' <<< "$DJ")
+          ZIP_URL=$(python3 -c 'import json,sys; print(json.load(sys.stdin)["zipUploadUrl"])' <<< "$DJ")
+          curl --fail -s -H 'Content-Type: application/zip' --upload-file site.zip "$ZIP_URL"
+          aws amplify start-deployment --app-id "$AMPLIFY_APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH" --job-id "$JOB_ID" >/dev/null
+          echo "job_id=$JOB_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for Amplify
+        run: |
+          JOB_ID="${{ steps.deploy.outputs.job_id }}"
+          for i in $(seq 1 60); do
+            S=$(aws amplify get-job --app-id "$AMPLIFY_APP_ID" \
+              --branch-name "$AMPLIFY_BRANCH" --job-id "$JOB_ID" \
+              --query 'job.summary.status' --output text)
+            echo "[$i/60] $S"
+            case "$S" in SUCCEED) exit 0 ;; FAILED|CANCELLED) exit 1 ;; esac
+            sleep 10
+          done; exit 1
+
+      - name: Verify at dev.zerogo.ai/blog
+        run: |
+          SLUG="${{ steps.create_post.outputs.slug }}"
+          POSTS=$(curl -s "https://dev.zerogo.ai/api/posts/index.json")
+          echo "Posts on dev.zerogo.ai:"
+          echo "$POSTS" | python3 -c "import json,sys; [print(p['slug']) for p in json.load(sys.stdin)]"
+          FOUND=$(echo "$POSTS" | python3 -c "
+import json,sys
+posts=json.load(sys.stdin)
+slug='$SLUG'
+print('yes' if slug in [p['slug'] for p in posts] else 'no')
+")
+          if [ "$FOUND" = "yes" ]; then
+            echo "SUCCESS: $SLUG is live at https://dev.zerogo.ai/blog"
+          else
+            echo "FAILED: $SLUG not found"
+            exit 1
+          fi
