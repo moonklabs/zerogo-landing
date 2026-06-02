@@ -10,6 +10,7 @@
     "postbuild": "tsx scripts/build-blog.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
+    "publish": "tsx scripts/publish-post.ts",
     "lint": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
