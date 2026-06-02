@@ -5,9 +5,12 @@ on:
     branches: [dev]
     paths: ['.github/run-e2e']
 
+permissions:
+  contents: write
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping
-        run: echo "Workflow triggered successfully"
+      - name: Ping with write permission
+        run: echo "contents:write workflow started"
