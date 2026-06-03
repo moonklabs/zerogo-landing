@@ -1,7 +1,8 @@
 ---
-title: "Cloudflare Worker API 발행 테스트"
-date: "2026-06-02T11:45:17.964Z"
-description: "Content API Worker E2E 검증"
+title: Cloudflare Worker API 발행 테스트
+date: 2026-06-02T11:45:17.964Z
+description: Content API Worker E2E 검증
+draft: true
 ---
 
 # Cloudflare Worker API 발행 테스트
