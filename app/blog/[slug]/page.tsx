@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
-import { BlogHeader, BlogFooter } from "@/app/_components/BlogChrome";
+import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
 import { SITE_URL, COMPANY } from "@/lib/site";
 
@@ -108,7 +108,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-900">
-      <BlogHeader />
+      <SiteHeader />
 
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Link
