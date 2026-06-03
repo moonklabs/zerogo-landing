@@ -16,11 +16,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
-  // Decap CMS lives as static files in public/admin/. Map the bare /admin path
-  // to the SPA entry. middleware.ts blocks /admin on non-dev hosts.
-  async rewrites() {
-    return [{ source: "/admin", destination: "/admin/index.html" }];
-  },
+  // /admin (Decap CMS) is served by app/admin/route.ts (compute route) because
+  // a static-file rewrite does not resolve on Amplify WEB_COMPUTE.
 };
 
 export default nextConfig;
