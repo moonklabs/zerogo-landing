@@ -56,3 +56,26 @@ for (const file of files) {
 posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 fs.writeFileSync(path.join(OUT_DIR, "index.json"), JSON.stringify(posts));
 console.log(`Blog build complete: ${posts.length} posts written to ${OUT_DIR}`);
+
+// Pre-generate static HTML files for SPA routes so Amplify static hosting
+// can serve /blog and /blog/:slug without needing server-side SPA rewrites.
+// Each file is a copy of dist/index.html; the SPA hydrates client-side.
+const DIST_DIR = path.join(__dirname, "../dist");
+const spaHtml = path.join(DIST_DIR, "index.html");
+if (fs.existsSync(spaHtml)) {
+  const html = fs.readFileSync(spaHtml, "utf-8");
+
+  // /blog → dist/blog/index.html
+  const blogDir = path.join(DIST_DIR, "blog");
+  fs.mkdirSync(blogDir, { recursive: true });
+  fs.writeFileSync(path.join(blogDir, "index.html"), html);
+
+  // /blog/:slug → dist/blog/[slug]/index.html
+  for (const post of posts) {
+    const slugDir = path.join(blogDir, post.slug);
+    fs.mkdirSync(slugDir, { recursive: true });
+    fs.writeFileSync(path.join(slugDir, "index.html"), html);
+  }
+
+  console.log(`SPA routes pre-generated: /blog + ${posts.length} post routes`);
+}
