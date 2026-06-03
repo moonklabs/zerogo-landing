@@ -176,7 +176,7 @@ npm run preview
 | `dev` | 개발 | https://dev.zerogo.ai | `deploy-amplify-dev.yml` |
 | `main` | 운영 | https://zerogo.ai | `deploy-amplify.yml` |
 
-### 자동 배포 (권장)
+### 자동 배포 (개발자)
 
 브랜치에 push하면 GitHub Actions가 자동으로 배포합니다:
 
@@ -184,17 +184,40 @@ npm run preview
 # 개발 환경 배포
 git push origin dev
 
-# 운영 환경 배포
+# 운영 환경 배포 (직접 push — 아래 '운영 승급' 방법 권장)
 git push origin main
 ```
 
-**배포 파이프라인 순서:**
+**개발(dev) 파이프라인:**
 1. TypeScript 타입 체크 (`tsc --noEmit`)
-2. Cloudflare Workers 배포 (`apply-api`, `decap-oauth`)
+2. Cloudflare Workers 배포 (`apply-api`, `decap-oauth`, `content-api`)
 3. 정적 빌드 (`npm run build` + `build-blog.ts`)
-4. AWS Amplify에 zip 업로드 및 배포 (완료까지 최대 10분)
+4. AWS Amplify 배포 (완료까지 최대 10분) → **dev.zerogo.ai**
 
-### 수동 배포
+**운영(main) 파이프라인:**
+1. TypeScript 타입 체크 (`tsc --noEmit`)
+2. Cloudflare Workers 배포 (`apply-api` 만)
+3. 정적 빌드 (`npm run build` + `build-blog.ts`)
+4. AWS Amplify 배포 (완료까지 최대 10분) → **zerogo.ai**
+
+### 운영 승급 — 경로 A: AI agent (마케터·디자이너 권장)
+
+마케터·디자이너가 dev.zerogo.ai에서 검토를 마친 뒤 AI agent에게 "운영에 반영해줘"라고 요청하면, agent가 아래 명령을 실행합니다:
+
+```bash
+npm run promote
+```
+
+스크립트가 dev → main을 fast-forward 후 운영 배포를 자동 시작합니다. GitHub를 직접 만지지 않아도 됩니다.
+
+### 운영 승급 — 경로 B: 웹 버튼 (비기술자 셀프서비스)
+
+**https://dev.zerogo.ai/publish.html** 에 접속 → **"운영에 게시하기"** 버튼 클릭 → GitHub 로그인 → 자동 반영.
+
+- GitHub 저장소 쓰기 권한이 있는 계정이 필요합니다 (Decap CMS 계정과 동일).
+- dev 환경(dev.zerogo.ai)에서만 동작합니다.
+
+### 수동 배포 (GitHub Actions)
 
 GitHub Actions 탭 → 워크플로우 선택 → **Run workflow** 버튼으로 수동 트리거 가능.
 

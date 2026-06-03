@@ -10,9 +10,38 @@ npm run build     # Build React app to dist/
 npm run lint      # TypeScript type check (tsc --noEmit)
 npm run clean     # Remove dist/
 npm run preview   # Preview production build via Vite
+npm run promote   # dev → main fast-forward 후 운영 배포 트리거
 ```
 
 No test suite is configured.
+
+## 운영 반영 (Promote to Production)
+
+이 프로젝트의 실제 콘텐츠 작업자는 **마케터·디자이너**로, Decap CMS(`/admin`)로 작업하며 GitHub에 익숙하지 않습니다. AI agent가 운영 반영을 보조합니다.
+
+### 브랜치 전략
+- `dev` → **dev.zerogo.ai** (개발·검토 환경)
+- `main` → **zerogo.ai** (운영)
+- `dev`가 항상 `main`을 선행하는 **선형 히스토리** (fast-forward 방식)
+
+### 운영 반영 요청 처리 (Agent 역할)
+
+사용자가 다음과 같이 요청하면 `npm run promote` 를 실행하세요:
+- "운영에 반영해줘", "운영에 올려줘", "게시해줘", "배포해줘", "메인에 올려줘"
+
+```bash
+npm run promote
+```
+
+이 스크립트는:
+1. dev/main 최신 상태를 fetch
+2. 이미 동일하면 멱등 종료
+3. fast-forward 가능 여부 검증 (분기 시 에러 + 안내)
+4. `git push origin origin/dev:refs/heads/main` (로컬 체크아웃 없음)
+5. 기존 `deploy-amplify.yml` 워크플로우가 `on: push: main` 으로 자동 운영 배포 시작
+
+### 분기(non-FF) 에러 발생 시
+스크립트가 에러 메시지를 출력합니다. 사용자에게 "dev와 main이 분기 상태라 자동 반영이 어렵습니다. 개발자에게 문의가 필요합니다"라고 안내하세요.
 
 ## Environment Variables
 
