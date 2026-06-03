@@ -70,6 +70,8 @@ jobs:
           npx wrangler deploy
 
       - name: Build static export
+        env:
+          KEEP_ADMIN: 'true'
         run: |
           npm run build
           npm run postbuild

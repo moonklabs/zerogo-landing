@@ -11,12 +11,12 @@ export default defineConfig(({mode}) => {
       react(),
       tailwindcss(),
       // Decap CMS admin is dev-only. Remove dist/admin/ from production builds
-      // so zerogo.ai/admin is never accessible (Amplify serves static files directly,
-      // bypassing server.ts which 404s /admin in prod).
+      // unless KEEP_ADMIN=true (set by deploy-amplify-dev.yml for dev.zerogo.ai).
+      // Amplify serves static files directly, bypassing server.ts 404 for /admin.
       {
         name: 'remove-admin-in-prod',
         closeBundle() {
-          if (mode === 'production') {
+          if (mode === 'production' && process.env.KEEP_ADMIN !== 'true') {
             const adminDir = path.resolve(__dirname, 'dist/admin');
             if (fs.existsSync(adminDir)) {
               fs.rmSync(adminDir, { recursive: true, force: true });
