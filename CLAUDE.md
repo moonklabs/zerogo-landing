@@ -89,6 +89,17 @@ Decap CMS served at `/admin`. Config in `public/admin/config.yml`:
 
 Alternative deployment of the `/api/apply` endpoint as a Cloudflare Worker (Wrangler-based). Independent from the main Express server. Deploy with `wrangler deploy` from that directory.
 
+## 운영 환경 규칙 (CRITICAL)
+
+### `/admin` 접근 차단
+
+**운영(zerogo.ai)에서 `/admin`은 절대 접근 가능해서는 안 된다.**
+
+- Decap CMS는 **dev 전용** 도구이며 운영 노출 금지
+- `vite.config.ts`의 `remove-admin-in-prod` 플러그인이 production 빌드 시 `dist/admin/`을 자동 삭제
+- Amplify는 `dist/`를 정적으로 서빙하므로 `server.ts`의 404 처리만으로는 부족 — **Vite 빌드 레벨 차단 필수**
+- `vite.config.ts` 수정 시 이 플러그인을 제거하거나 비활성화하지 말 것
+
 ### Path Alias
 
 `@` resolves to the project root (`/Users/drumcap/workspace/zerogo-landing`), configured in `vite.config.ts`.

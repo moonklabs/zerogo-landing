@@ -221,6 +221,16 @@ npm run promote
 
 GitHub Actions 탭 → 워크플로우 선택 → **Run workflow** 버튼으로 수동 트리거 가능.
 
+### 운영 환경 제약
+
+| 기능 | dev.zerogo.ai | zerogo.ai |
+|------|:---:|:---:|
+| `/admin` (Decap CMS) | ✅ | ❌ 차단 |
+| `/publish.html` | ✅ | 접속은 가능하나 OAuth 비동작 |
+| 블로그 CRUD (content-api) | ✅ | ❌ (dev 브랜치 전용) |
+
+**`/admin` 차단 구현**: `vite.config.ts`의 `remove-admin-in-prod` 플러그인이 production 빌드 시 `dist/admin/`을 자동 삭제합니다. Amplify는 `dist/`를 정적으로 서빙하므로 `server.ts` 404만으로는 부족하며, 빌드 레벨 차단이 필수입니다.
+
 ### 필요한 GitHub Secrets / Variables
 
 | 키 | 종류 | 설명 |
