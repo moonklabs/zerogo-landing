@@ -59,6 +59,19 @@ jobs:
           cd dist
           zip -r ../site.zip .
 
+      - name: Configure Amplify SPA rewrite (idempotent)
+        run: |
+          set -euo pipefail
+          EXISTING=$(aws amplify get-app --app-id "$AMPLIFY_APP_ID" --query 'app.customRules' --output json 2>/dev/null || echo '[]')
+          if echo "$EXISTING" | grep -q 'index.html'; then
+            echo "SPA rewrite already configured, skipping"
+          else
+            aws amplify update-app \
+              --app-id "$AMPLIFY_APP_ID" \
+              --custom-rules '[{"source":"/<*>","target":"/index.html","status":"404-200"}]'
+            echo "SPA rewrite configured"
+          fi
+
       - name: Upload and start Amplify deployment
         id: deploy
         shell: bash
