@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/posts";
 import { SITE_URL } from "@/lib/site";
-import { BlogHeader, BlogFooter } from "@/app/_components/BlogChrome";
+import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -43,7 +43,7 @@ export default async function BlogListPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-900">
-      <BlogHeader />
+      <SiteHeader />
 
       <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <h1 className="mb-12 text-4xl font-extrabold tracking-tight text-black sm:text-5xl">
