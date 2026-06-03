@@ -1,11 +1,21 @@
 node_modules/
 build/
 dist/
+.next/
+out/
 coverage/
 .DS_Store
 *.log
 .env*
 !.env.example
+
+# Next.js generated files
+next-env.d.ts
+*.tsbuildinfo
+
+# content-api experiment artifacts (worker dropped in Next migration)
+api-keys.json
+metadata.json
 
 # Oh My Series
 .omc/

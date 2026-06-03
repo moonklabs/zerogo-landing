@@ -6,7 +6,7 @@
 
 **서비스 URL**: https://zerogo.ai | **개발**: https://dev.zerogo.ai
 
-**Stack**: React 19 + TypeScript + Vite 6 + TailwindCSS v4 + Express
+**Stack**: Next.js 15 (App Router, SSR) + React 19 + TypeScript + TailwindCSS v4
 
 ---
 
@@ -57,148 +57,88 @@ npm run dev
 ## 명령어
 
 ```bash
-npm run dev      # 개발 서버 실행 (Express + Vite 미들웨어)
-npm run build    # React 앱 빌드 → dist/
+npm run dev      # 개발 서버 실행 (Next.js, 포트 3001)
+npm run build    # Next.js 앱 빌드 → .next/
+npm run start    # 프로덕션 서버 시작 (포트 3001)
 npm run lint     # TypeScript 타입 체크 (tsc --noEmit)
-npm run clean    # dist/ 삭제
-npm run preview  # 프로덕션 빌드 미리보기
+npm run promote  # dev → main fast-forward + 운영 배포
+npm run publish  # 블로그 포스트 공개 (Decap CMS 헬퍼)
 ```
 
 ---
 
 ## 아키텍처
 
-### 서버 (`server.ts`)
+### Next.js App Router (`app/`)
 
-Express 서버가 개발/운영 호스트 역할을 겸합니다:
+서버 렌더링(SSR) Next.js 앱:
 
-- **개발**: Vite를 미들웨어로 마운트 (`createViteServer({ middlewareMode: true })`)
-- **운영**: `dist/`를 정적 파일로 서빙 (SPA 폴백 포함)
+- `app/layout.tsx` – Root layout (메타데이터, Organization/SoftwareApplication/FAQPage JSON-LD)
+- `app/page.tsx` + `app/_components/HomeClient.tsx` – 홈 페이지 (모션용 클라이언트 컴포넌트)
+- `app/blog/page.tsx` – 블로그 목록 (서버 렌더링, ItemList JSON-LD)
+- `app/blog/[slug]/page.tsx` – 블로그 포스트 (서버 렌더링, generateMetadata, BlogPosting + BreadcrumbList JSON-LD)
+- `app/api/apply/route.ts` – 폼 제출 엔드포인트 (Google Apps Script로 전달)
+- `app/sitemap.ts` – 동적 사이트맵 (블로그 + AI 봇 포함)
+- `app/robots.ts` – 동적 robots.txt (AI 봇 허용)
+- `app/opengraph-image.tsx` + `app/blog/opengraph-image.tsx` + `app/blog/[slug]/opengraph-image.tsx` – next/og로 동적 OG 이미지
+- `middleware.ts` – Admin gate: 운영 환경에서 `/admin` 차단 (DEPLOY_ENV=production)
 
-**API 라우트** (서버 사이드):
-- `POST /api/apply` → Google Apps Script 웹훅으로 폼 제출 전달
-- `GET /api/posts` → `content/blog/*.md` 파일 목록 반환 (날짜순 정렬)
-- `GET /api/posts/:slug` → 단일 마크다운 포스트 반환
-
-### Content API (External Agent Integration)
-
-The Content API allows external AI agents to create, update, and delete blog posts via REST API.
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/posts` | Create new blog post |
-| GET | `/api/posts` | List all posts |
-| GET | `/api/posts/:slug` | Get single post |
-| PUT | `/api/posts/:slug` | Update post |
-| DELETE | `/api/posts/:slug` | Delete post |
-
-For full documentation, see [docs/CONTENT-API.md](docs/CONTENT-API.md).
-
-**Setup for external agents:**
-```bash
-# .env for external agent
-GITHUB_TOKEN=ghp_your_personal_access_token
-GITHUB_OWNER=moonklabs
-GITHUB_REPO=zerogo-landing
-GITHUB_BRANCH=dev
-```
-
-**Example usage:**
-```bash
-curl -X POST http://localhost:3001/api/posts \
-  -H "Content-Type: application/json" \
-  -d '{"title": "AI Post", "body": "# Hello\n\nContent"}'
-```
-
-**어드민 (비운영 환경 전용)**:
-- `GET /admin/config.yml` → Decap CMS 설정을 동적 생성 (환경에 맞는 `base_url` 주입)
-- `GET /api/auth` → GitHub OAuth 리다이렉트
-- `GET /api/auth/callback` → GitHub 토큰 교환 후 CMS로 전달
-
-### 프론트엔드 (`src/`)
-
-라우트 3개의 싱글페이지 앱 (`src/App.tsx`):
-
-| 경로 | 컴포넌트 |
-|------|---------|
-| `/` | `src/pages/Home.tsx` |
-| `/blog` | `src/pages/BlogList.tsx` |
-| `/blog/:slug` | `src/pages/BlogPost.tsx` |
+**API 라우트**:
+- `POST /api/apply` → Google Apps Script 웹훅으로 폼 제출 전달. **GAS_URL 및 GAS_AUTH_KEY 필수.**
 
 ### 블로그 콘텐츠 (`content/blog/`)
 
-파일 기반 블로그: gray-matter 프론트매터(`title`, `date`, `description`)가 포함된 마크다운 파일. Express 서버가 요청 시 읽어서 반환 (빌드 스텝 불필요).
+파일 기반 블로그: gray-matter 프론트매터(`title`, `date`, `description`)가 포함된 마크다운 파일. Next.js가 서버 사이드에서 요청 시 읽음 (빌드 스텝 불필요).
 
 ### CMS (`/admin`)
 
-Decap CMS를 `/admin`에서 서빙. **비운영 환경에서만 접근 가능** (운영에서는 404 반환).
+Decap CMS를 `/admin`에서 서빙. 정적 HTML이 `next.config.ts` 리라이트로 제공됨 (`/admin` → `/admin/index.html`). Config in `public/admin/config.yml`:
+- `content/blog/`과 `public/images/blog/`에 포스트 및 이미지 기록
+- 운영 배포를 위해 GitHub 백엔드 구성됨
 
-- **로컬 개발**: GitHub OAuth 프록시가 `server.ts`에 내장되어 있어 `npm run dev`만으로 동작
-- **dev.zerogo.ai**: Cloudflare Worker(`zerogo-decap-oauth`)가 OAuth 프록시 역할
+### 헬퍼 라이브러리
+
+- `lib/posts.ts` – 마크다운 읽기 및 프론트매터 파싱 (gray-matter)
+- `lib/site.ts` – 사이트 상수 (URL, 메타데이터)
 
 ### Cloudflare Workers (`cloudflare-workers/`)
 
 | Worker | 역할 |
 |--------|------|
-| `apply-api` | `/api/apply` 엔드포인트 (CF 배포용) |
-| `decap-oauth` | Decap CMS GitHub OAuth 프록시 |
+| `apply-api` | `/api/apply` 엔드포인트 (CF 배포용, 지원 중지 — 같은 출처 요청 사용) |
+| `decap-oauth` | Decap CMS GitHub OAuth 프록시 (dev 전용) |
 
 ---
 
 ## 빌드
 
 ```bash
-# React 앱 빌드
+# Next.js 앱 빌드
 npm run build
 
-# 블로그 정적 인덱스 생성 (빌드 후 필수)
-npx tsx scripts/build-blog.ts
-
 # 빌드 결과 확인
-test -f dist/index.html
-test -f dist/api/posts/index.json
+test -d .next
 ```
 
-빌드 결과물은 `dist/`에 생성됩니다. 로컬에서 빌드 결과를 미리보려면:
-
-```bash
-npm run preview
-```
+빌드 결과물은 `.next/`에 생성됩니다.
 
 ---
 
-## 배포
+## 배포 / 운영 반영
 
 ### 브랜치 전략
 
-| 브랜치 | 환경 | URL | 워크플로우 |
-|--------|------|-----|-----------|
-| `dev` | 개발 | https://dev.zerogo.ai | `deploy-amplify-dev.yml` |
-| `main` | 운영 | https://zerogo.ai | `deploy-amplify.yml` |
+| 브랜치 | 환경 | URL | 배포 방식 |
+|--------|------|-----|----------|
+| `dev` | 개발 | https://dev.zerogo.ai | Amplify WEB_COMPUTE (자동 빌드) |
+| `main` | 운영 | https://zerogo.ai | Amplify WEB_COMPUTE (자동 빌드) |
 
-### 자동 배포 (개발자)
+### 배포 모델 (Amplify WEB_COMPUTE)
 
-브랜치에 push하면 GitHub Actions가 자동으로 배포합니다:
-
-```bash
-# 개발 환경 배포
-git push origin dev
-
-# 운영 환경 배포 (직접 push — 아래 '운영 승급' 방법 권장)
-git push origin main
-```
-
-**개발(dev) 파이프라인:**
-1. TypeScript 타입 체크 (`tsc --noEmit`)
-2. Cloudflare Workers 배포 (`apply-api`, `decap-oauth`, `content-api`)
-3. 정적 빌드 (`npm run build` + `build-blog.ts`)
-4. AWS Amplify 배포 (완료까지 최대 10분) → **dev.zerogo.ai**
-
-**운영(main) 파이프라인:**
-1. TypeScript 타입 체크 (`tsc --noEmit`)
-2. Cloudflare Workers 배포 (`apply-api` 만)
-3. 정적 빌드 (`npm run build` + `build-blog.ts`)
-4. AWS Amplify 배포 (완료까지 최대 10분) → **zerogo.ai**
+AWS Amplify가 GitHub 저장소에 직접 연결되어, main 또는 dev 브랜치에 push하면 자동으로 빌드 및 배포합니다:
+1. `amplify.yml`에 정의된 빌드 단계 실행 (`npm run build`)
+2. `.next/` 출력물 배포
+3. Next.js 런타임 (WEB_COMPUTE) 위에서 SSR 제공
 
 ### 운영 승급 — 경로 A: AI agent (마케터·디자이너 권장)
 
@@ -208,7 +148,7 @@ git push origin main
 npm run promote
 ```
 
-스크립트가 dev → main을 fast-forward 후 운영 배포를 자동 시작합니다. GitHub를 직접 만지지 않아도 됩니다.
+스크립트가 dev → main을 fast-forward 후 푸시합니다. Amplify가 자동으로 main 브랜치 배포를 시작합니다. GitHub를 직접 만지지 않아도 됩니다.
 
 ### 운영 승급 — 경로 B: 웹 버튼 (비기술자 셀프서비스)
 
@@ -217,35 +157,38 @@ npm run promote
 - GitHub 저장소 쓰기 권한이 있는 계정이 필요합니다 (Decap CMS 계정과 동일).
 - dev 환경(dev.zerogo.ai)에서만 동작합니다.
 
-### 수동 배포 (GitHub Actions)
-
-GitHub Actions 탭 → 워크플로우 선택 → **Run workflow** 버튼으로 수동 트리거 가능.
-
 ### 운영 환경 제약
 
 | 기능 | dev.zerogo.ai | zerogo.ai |
 |------|:---:|:---:|
 | `/admin` (Decap CMS) | ✅ | ❌ 차단 |
 | `/publish.html` | ✅ | 접속은 가능하나 OAuth 비동작 |
-| 블로그 CRUD (content-api) | ✅ | ❌ (dev 브랜치 전용) |
 
-**`/admin` 차단 구현**: `vite.config.ts`의 `remove-admin-in-prod` 플러그인이 production 빌드 시 `dist/admin/`을 자동 삭제합니다. Amplify는 `dist/`를 정적으로 서빙하므로 `server.ts` 404만으로는 부족하며, 빌드 레벨 차단이 필수입니다.
+**`/admin` 차단 구현**: `middleware.ts`의 admin gate가 `/admin` 접근을 두 가지 검사로 차단합니다:
+- 주 검사: `DEPLOY_ENV === "production"` (Amplify 환경 변수, 서버 제어)
+- 방어 심화: 호스트가 `dev.*` 또는 `localhost`여야 함
 
-### 필요한 GitHub Secrets / Variables
+**CRITICAL**: Amplify의 **main 브랜치**에서 `DEPLOY_ENV=production`을 반드시 설정하세요. **dev 브랜치**는 `DEPLOY_ENV=development` 또는 미설정.
 
-| 키 | 종류 | 설명 |
-|----|------|------|
-| `AWS_ACCESS_KEY_ID` | Secret | AWS 자격증명 |
-| `AWS_SECRET_ACCESS_KEY` | Secret | AWS 자격증명 |
-| `CLOUDFLARE_API_TOKEN` | Secret | Cloudflare 배포 토큰 |
-| `CLOUDFLARE_ACCOUNT_ID` | Secret | Cloudflare 계정 ID |
-| `AWS_REGION` | Variable | AWS 리전 (예: `ap-northeast-2`) |
-| `AMPLIFY_APP_ID` | Variable | Amplify 앱 ID |
-| `AMPLIFY_BRANCH` | Variable | Amplify 배포 브랜치 (예: `main`, `dev`) |
-| `GITHUB_TOKEN` | Secret | Content API 연동용 GitHub PAT |
+### 필요한 Amplify 환경 변수
+
+| 브랜치 | 변수 | 값 |
+|--------|------|-----|
+| `dev` | `DEPLOY_ENV` | `development` (또는 미설정) |
+| `main` | `DEPLOY_ENV` | `production` |
+| 모두 | `GAS_URL` | Google Apps Script 웹훅 URL |
+| 모두 | `GAS_AUTH_KEY` | GAS 인증 키 |
+| dev | `DECAP_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID |
+| dev | `DECAP_GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret |
+
+### Cloudflare Workers 배포
+
+Cloudflare Workers는 여전히 GitHub Actions로 배포됩니다:
+- `decap-oauth` (dev 전용)
+- `apply-api` (지원 중지 — 같은 출처 요청 사용)
 
 ---
 
 ## 경로 별칭
 
-`@`는 프로젝트 루트로 resolve됩니다 (`vite.config.ts` 설정).
+`@`는 프로젝트 루트로 resolve됩니다 (`tsconfig.json`, `next.config.ts` 설정).

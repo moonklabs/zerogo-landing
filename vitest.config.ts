@@ -1,16 +1,15 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [react()],
   test: {
     globals: true,
-    environment: 'node',
-    include: ['src/**/*.{test,spec}.ts', 'tests/ci/**/*.{test,spec}.ts'],
-    exclude: ['node_modules', 'dist'],
+    environment: "node",
+    // CI logic tests only. Playwright specs (tests/*.spec.ts) run via Playwright.
+    include: ["tests/ci/**/*.{test,spec}.ts"],
+    exclude: ["node_modules", "dist", ".next", "tests/*.spec.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
     },
   },
 });

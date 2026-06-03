@@ -45,7 +45,17 @@ export default {
       }
 
       const GAS_URL = "https://script.google.com/macros/s/AKfycbw68O2Im54Jmpy4DHKxdALwHGXVUrZPkQT8wTVS0XrOAx9QKVjr4BBNyBq_7cRyv1bW/exec";
-      const AUTH_KEY = env.GAS_AUTH_KEY || "my_zero098aidl_secret_123";
+      const AUTH_KEY = env.GAS_AUTH_KEY;
+      if (!AUTH_KEY) {
+        console.error("GAS_AUTH_KEY not configured");
+        return new Response(JSON.stringify({ error: "서버 설정 오류입니다. 관리자에게 문의해주세요." }), {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        });
+      }
 
       const gasResponse = await fetch(GAS_URL, {
         method: "POST",

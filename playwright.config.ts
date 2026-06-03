@@ -23,9 +23,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `PORT=${process.env.PORT || '3001'} npx tsx server.ts`,
+    command: `npx next dev -p ${process.env.PORT || '3001'}`,
     url: `http://127.0.0.1:${process.env.PORT || '3001'}`,
     reuseExistingServer: !process.env.CI,
-    timeout: 30 * 1000,
+    timeout: 120 * 1000,
   },
 });
