@@ -1,6 +1,6 @@
 // Central site constants shared across pages, metadata, and structured data.
 
-export const SITE_URL = "https://zerogo.ai";
+export const SITE_URL = "https://www.zerogo.ai";
 export const SITE_NAME = "ZEROGO";
 export const SITE_TITLE =
   "ZEROGO AI - 쿠팡 판매자를 위한 품절 방지 AI 에이전트";

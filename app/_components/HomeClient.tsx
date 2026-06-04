@@ -203,6 +203,30 @@ export default function HomeClient() {
                   ZEROGO는 재고를 보여주는 대신 오늘 봐야 할 상품, 예상 품절일,
                   발주 마감일, 지금 해야 할 액션을 먼저 정리합니다.
                 </p>
+
+                <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
+                  <div className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-black/40">
+                    계산 예시
+                  </div>
+                  <p className="mt-3 text-sm sm:text-base leading-relaxed text-black/80">
+                    현재 추정 재고{" "}
+                    <span className="font-bold text-black">120개</span>, 최근 7일
+                    평균 판매가{" "}
+                    <span className="font-bold text-black">하루 15개</span>라면 약{" "}
+                    <span className="font-bold text-black">8일 뒤</span> 품절됩니다.
+                    발주 후 입고까지{" "}
+                    <span className="font-bold text-black">5일</span>이 걸린다면,
+                    발주 마감일은{" "}
+                    <span className="font-bold text-brand">
+                      오늘로부터 3일 이내
+                    </span>
+                    입니다.
+                  </p>
+                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-black/55">
+                    ZEROGO는 이 계산을 모든 SKU에 대해 매일 자동으로 수행해, 오늘
+                    발주해야 할 상품만 추려서 보여줍니다.
+                  </p>
+                </div>
               </motion.div>
 
               <motion.div

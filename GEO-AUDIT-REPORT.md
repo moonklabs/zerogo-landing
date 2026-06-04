@@ -1,228 +1,159 @@
-# GEO Audit Report — zerogo.ai
+---
+brand_name: ZEROGO
+domain: zerogo.ai
+audit_date: 2026-06-04
+location: 대한민국 (South Korea)
+geo_score: 61
+business_type: B2B SaaS (Korean-language)
+---
 
-**날짜:** 2026년 6월 3일  
-**대상 URL:** https://zerogo.ai  
-**비즈니스:** 쿠팡 판매자를 위한 품절 방지 AI 에이전트  
-**회사:** (주) 뭉클랩 (Moonklabs Co., Ltd.)
+# GEO + SEO Audit — ZEROGO (zerogo.ai)
+
+**Date:** 2026-06-04
+**Business type:** B2B SaaS — AI 품절 방지 에이전트 for Coupang Rocket Growth (로켓그로스) sellers
+**Operating company:** (주)뭉클랩 (Moonklabs Co., Ltd.), CEO 윤도선
+**Serving host:** `https://www.zerogo.ai` (apex `zerogo.ai` 302-redirects to www)
 
 ---
 
-## 종합 GEO 점수: **31 / 100** 🔴
+## Composite GEO Score: **61 / 100** — Fair-to-Good
 
-| 카테고리 | 가중치 | 점수 | 환산 |
-|----------|--------|------|------|
-| AI 인용 가능성 & 가시성 | 25% | 20/100 | 5.0점 |
-| 브랜드 권위 신호 | 20% | 5/100 | 1.0점 |
-| 콘텐츠 품질 & E-E-A-T | 20% | 38/100 | 7.6점 |
-| 기술 기반 | 15% | 60/100 | 9.0점 |
-| 구조화 데이터 | 10% | 65/100 | 6.5점 |
-| 플랫폼 최적화 | 10% | 20/100 | 2.0점 |
+A genuinely strong **technical + AI-crawler foundation** (SSR, robots allows all AI bots, llms.txt, 6 JSON-LD blocks) held back by a **near-empty content layer** (1 placeholder blog post), **no brand-authority signals**, and one **canonical-host bug**. The infrastructure to win AI citations is already in place — there is almost nothing for AI engines to cite yet.
 
-> **해석:** AI 검색 엔진(ChatGPT, Perplexity, Claude, Google AIO)이 "쿠팡 재고 관리 도구"를 검색하는 사용자에게 zerogo.ai를 인용할 가능성이 **낮음**. 현재 검색 엔진에서 zerogo.ai 관련 외부 언급은 0건.
-
----
-
-## 🚨 긴급 버그: 운영에서 /blog 404
-
-**현상:** `https://zerogo.ai/blog` → HTTP 404  
-**원인:** Amplify SPA 리라이트 규칙(`/<*>` → `/index.html`)이 운영(main) 브랜치에 적용되지 않은 것으로 추정. 개발 워크플로우(`deploy-amplify-dev.yml`)에서만 `aws amplify update-app`으로 리라이트 규칙을 설정함.  
-**영향:** 블로그 전체, `/blog/:slug` 모든 경로 404 → 검색엔진/AI 크롤러에 블로그 콘텐츠 불노출  
-**조치:** `deploy-amplify.yml`에 SPA 리라이트 설정 스텝 추가 필요 (또는 Amplify 콘솔에서 app-level 규칙 확인)
+| Category | Weight | Score | Notes |
+|---|---|---|---|
+| AI Citability & Visibility | 25% | **76/100** | Crawler access 95, llms.txt 85, on-page citability 68. Blog has nothing quotable. |
+| Brand Authority Signals | 20% | **45/100** | Early-stage. Only sameAs = GitHub. No LinkedIn/Naver/Crunchbase/Wikidata, no press, no community. |
+| Content Quality & E-E-A-T | 20% | **47/100** | 1 "Hello World" post. No case studies, no original data, no author bylines, no About/Privacy. |
+| Technical Foundations | 15% | **72/100** | Excellent SSR + security headers. **Canonical-host inconsistency** is the one critical bug. |
+| Structured Data | 10% | **62/100** | 6 valid schema types, server-rendered. Thin `sameAs`, no `logo`, author=Organization not Person. |
+| Platform Optimization | 10% | **68/100** | Strongest: Gemini 75, AIO 72. Weakest: ChatGPT 58 (entity recognition), Bing 62 (no IndexNow). |
 
 ---
 
-## 카테고리별 상세
+## What's Already Excellent (don't touch)
 
-### 1. AI 인용 가능성 & 가시성 — 20/100 🔴
-
-**긍정:**
-- ✅ `robots.txt`: GPTBot, ClaudeBot, PerplexityBot, Google-Extended, BingBot 명시적 허용
-- ✅ "AI 봇이 콘텐츠를 크롤하고 인용할 수 있도록 허용" 주석 포함
-
-**문제:**
-- ❌ React SPA(클라이언트 렌더링) — AI 크롤러가 JS 실행 없이 볼 수 있는 콘텐츠가 타이틀 1줄뿐
-- ❌ `llms.txt` 없음 (`/llms.txt` → 404)
-- ❌ 홈페이지 인용 가능한 구체적 패시지 부족 (데이터, 수치, 방법론 없음)
-- ❌ 블로그 404 → AI 엔진이 참조할 심층 콘텐츠 전무
-
-**권장:**
-- `public/llms.txt` 생성 (서비스 설명, 사용 사례, 핵심 기능 요약)
-- React → Next.js SSG/SSR 또는 `vite-plugin-ssr` 고려 (정적 HTML pre-render)
+- **SSR everywhere** — Next.js 15, `x-nextjs-prerender: 1`. All content + all JSON-LD visible to GPTBot/ClaudeBot/PerplexityBot without JS execution.
+- **AI crawler access — 95/100.** robots.txt explicitly allows GPTBot, ChatGPT-User, PerplexityBot, ClaudeBot, anthropic-ai, Google-Extended, Bingbot.
+- **llms.txt — 85/100.** Present, comprehensive, well-structured (overview, features, target, differentiation, links, company info).
+- **Security headers — 100/100.** nosniff, SAMEORIGIN, strict-origin-when-cross-origin, HTTP/2 + h3.
+- **6 valid JSON-LD types** server-rendered: Organization, SoftwareApplication, FAQPage, BlogPosting, BreadcrumbList, ItemList.
 
 ---
 
-### 2. 브랜드 권위 신호 — 5/100 🔴
+## Two Convergent Problems (every subagent surfaced these)
 
-**현황:**
-- ❌ 구글 검색에서 "zerogo.ai" 관련 결과 0건
-- ❌ Reddit, YouTube, Naver, 블로그 등 외부 언급 0건
-- ❌ 언론 보도, 파트너십, 어워드 없음
-- ❌ 고객 후기, 리뷰 플랫폼 없음
+### 🔴 #1 — Content layer is empty (the strategic blocker)
+The blog has a single placeholder post ("Hello World", ~45 words, citability 18/100). For a Coupang-seller stockout product, the site has **~5-7% of the topical coverage** needed to be cited. AI engines asked "로켓그로스 품절 방지" or "발주 타이밍 계산" find **nothing to cite** from zerogo.ai. This single gap depresses Content, Citability, Platform, and Brand scores simultaneously.
 
-**시장 기회:**
-- ✅ 쿠팡 AI 투자 활발 (2026년 5월 AI 선별 시스템 확대 보도 다수)
-- ✅ "쿠팡 셀러 자동화" 키워드 경쟁 아직 낮음
+### 🔴 #2 — Canonical-host inconsistency (the one technical bug)
+Site **serves on `www.zerogo.ai`**, but every canonical signal points to the **apex `zerogo.ai`** which 302-redirects:
+- `<link rel=canonical>` / `og:url` / JSON-LD `url` → `https://zerogo.ai`
+- robots.txt → `Host: https://zerogo.ai` + `Sitemap: https://zerogo.ai/sitemap.xml`
+- sitemap `<loc>` entries → all `https://zerogo.ai/...`
 
-**권장:**
-- 쿠팡 셀러 커뮤니티(네이버 카페, 카카오 오픈채팅, 쿠팡 파트너스 포럼) 진입
-- 셀러 성공 사례 1건이라도 퍼블리싱 시 효과 극대화
+Every crawler hit must follow a 302 to reach the real page. Conflicting "preferred host" signals dilute ranking/crawl equity. **This is the highest-ROI fix** — a code change in this repo, ~1 hour. (Decide on ONE canonical host. Since the site already serves on www, either standardize everything on www, OR make apex serve 200 directly and drop the www redirect — pick one and align canonical + robots + sitemap + JSON-LD to it.)
 
 ---
 
-### 3. 콘텐츠 품질 & E-E-A-T — 38/100 🔴
+## Prioritized Action Plan
 
-**홈페이지 (70/100):**
-- ✅ 명확한 문제-솔루션 프레이밍 ("숫자가 아닌 행동을 보여준다")
-- ✅ 작동 방식 설명 (판매 속도 + 현재 재고 + 예측 품절일 + 발주 마감일)
-- ✅ Kakao Push + 웹 워크스페이스 연동 설명
-- ✅ 회사 정보 투명 (대표자 윤도선, 사업자번호 488-88-02579, 주소)
-- ❌ 구체적 수치/데이터 없음 (몇 % 품절 감소, 절약 시간 등)
-- ❌ 고객 사례/증언 없음
-- ❌ 팀 소개, 창업 배경, 전문성 없음
+### 🔴 CRITICAL (do first)
+1. **Fix canonical host** — align canonical / `og:url` / JSON-LD `url` / robots `Host` & `Sitemap` / sitemap `<loc>` to ONE host. Files: `lib/site.ts`, `app/layout.tsx`, `app/robots.ts`, `app/sitemap.ts`. *In-repo, ~1h.*
+2. **Replace the "Hello World" post + ship a content engine** — publish 3 substantive Korean articles in the next 4 weeks, then a steady cadence. Highest-impact titles:
+   - "로켓그로스 품절: 원인 3가지와 예방 전략" (with the actual reorder formula + worked example)
+   - "발주 타이밍 계산: 리드타임 × 판매속도 × 마진" (step-by-step, numbers)
+   - "쿠팡 로켓그로스 셀러 사례: 품절 40% 줄인 방법" (anonymized case data)
+3. **Add brand-authority `sameAs` + entity presence** — create LinkedIn company page, Naver place/company, Crunchbase; add all to Organization `sameAs` (currently GitHub-only). Naver is critical for the Korean market.
 
-**블로그 (5/100):**
-- ❌ `/blog` 운영에서 404 (접근 불가)
-- ❌ 게시된 글 1건 (테스트 글, ~50단어)
-- ❌ 콘텐츠 실질적 전무
+### 🟠 HIGH
+4. **Add worked numeric examples to the homepage** "How it works" (e.g., "재고 50개 ÷ 7.5개/일 → 6.7일 후 품절, 발주 마감 X일") — the single most quotable content type for AI.
+5. **Organization schema: add `logo` + `description`**; **SoftwareApplication: add `aggregateRating`** once you have reviews.
+6. **Blog author → Person schema + visible byline + dates** (currently author=Organization). Boosts E-E-A-T for ChatGPT/Gemini.
+7. **Add About + Privacy + Terms pages** — table-stakes trust signals for B2B SaaS handling seller data (Korean PIPA).
 
-**E-E-A-T 신호 부재:**
-- ❌ 개인정보처리방침 없음
-- ❌ 이용약관 없음
-- ❌ 보안/컴플라이언스 정보 없음
-- ❌ 팀/창업자 소개 없음
+### 🟡 MEDIUM
+8. **Bing: add `msvalidate.01` + IndexNow** — unlocks the weakest platform (62) for ~30 min work.
+9. **Create `/llms-full.txt`** (extended FAQ, integrations, pricing, privacy) and link from llms.txt.
+10. **Add `Content-Signal` directive** to robots.txt (`ai-train=yes, search=yes, ai-retrieval=yes`).
+11. **`speakable` on articles** + `HowTo` schema on procedural guides.
 
----
-
-### 4. 기술 기반 — 60/100 🟡
-
-**강점:**
-- ✅ HTTPS (CloudFront + S3)
-- ✅ HTTP/2
-- ✅ 모바일 반응형 (TailwindCSS v4)
-- ✅ 빠른 CDN 배포 (AWS Amplify CloudFront)
-- ✅ 예상 Core Web Vitals: PASS (LCP ~2-3s, CLS ~0.05)
-
-**문제:**
-- 🚨 **/blog 404** (운영 SPA 라우팅 미작동)
-- ❌ `og:image` 없음 → SNS 공유 시 미리보기 없음
-- ❌ `twitter:image` 없음
-- ❌ 블로그 포스트별 동적 메타 태그 없음 (모든 /blog/:slug가 홈페이지 메타 표시)
-- ❌ 보안 헤더 없음 (X-Content-Type-Options, CSP 등)
-- ❌ sitemap.xml에 홈페이지만 포함 (/blog URL 누락)
-- ❌ 블로그 포스트별 canonical 없음
+### 🟢 LOW
+12. HSTS header, preconnect to image CDN, `WebSite`+`SearchAction` schema (if/when search exists), founder/team credibility content.
 
 ---
 
-### 5. 구조화 데이터 — 65/100 🟡
-
-**존재하는 스키마:**
-- ✅ `SoftwareApplication` (name, category: BusinessApplication, offers)
-- ✅ `FAQPage` (4개 Q&A)
-
-**누락된 스키마:**
-- ❌ `Organization` (founders, foundingDate, contactPoint, sameAs 없음)
-- ❌ `BlogPosting` (각 블로그 포스트 별도 JSON-LD 없음)
-- ❌ `BreadcrumbList`
-- ❌ `HowTo` (기능 설명 섹션에 적합)
-- ❌ `AggregateRating` (리뷰 수집 후)
+## Per-Platform Readiness
+| Platform | Score | Biggest lever |
+|---|---|---|
+| Google Gemini | 75 | Add video (YouTube demos) + downloadable guides |
+| Google AI Overviews | 72 | Question-headed H2s + 40-60 word answer blocks in Korean |
+| Perplexity | 65 | Original data / case studies; Reddit + seller-community presence |
+| Bing Copilot | 62 | IndexNow + `msvalidate.01` + HowTo schema |
+| ChatGPT Web Search | 58 | Entity recognition — Wikidata/LinkedIn, author bylines |
 
 ---
 
-### 6. 플랫폼 최적화 — 20/100 🔴
+## Ready-to-Paste Schema Upgrades
 
-| 플랫폼 | 상태 | 주요 이슈 |
-|--------|------|-----------|
-| Google AIO | ❌ 비최적화 | 인용 가능한 패시지 없음, SPA 렌더링 문제 |
-| ChatGPT | ❌ 비최적화 | llms.txt 없음, 외부 언급 없음 |
-| Perplexity | ❌ 비최적화 | 인덱싱 됐을 수 있으나 인용 트리거 없음 |
-| Claude | ❌ 비최적화 | llms.txt 없음 |
-| Naver AI | ❌ 비최적화 | 한국어 시장임에도 네이버 노출 0 |
-
----
-
-## 우선순위별 액션플랜
-
-### 🔴 즉시 (이번 주)
-
-| # | 작업 | 예상 임팩트 | 난이도 |
-|---|------|-------------|--------|
-| 1 | **운영 /blog 404 수정** — `deploy-amplify.yml`에 SPA 리라이트 설정 추가 | 🔴 Critical | 낮음 |
-| 2 | **`og:image` 추가** — 1200×630 소셜 미리보기 이미지 생성 후 `index.html`에 추가 | 높음 | 낮음 |
-| 3 | **`/public/llms.txt` 생성** — 서비스 개요, 사용 사례, 핵심 기능 요약 (영/한) | 높음 | 낮음 |
-| 4 | **개인정보처리방침 + 이용약관 페이지** 추가 | 중간 | 낮음 |
-
-### 🟠 단기 (2-4주)
-
-| # | 작업 | 예상 임팩트 |
-|---|------|-------------|
-| 5 | **블로그 첫 3편 게시** — 쿠팡 셀러 재고 관리 실전 가이드 (각 1,200자+) | 매우 높음 |
-| 6 | **동적 블로그 메타 태그** — BlogPost.tsx에 `document.title`, `og:title/description` 동적 설정 | 높음 |
-| 7 | **BlogPosting JSON-LD** — 각 포스트에 `author`, `datePublished`, `headline` 포함 | 높음 |
-| 8 | **sitemap.xml 동적 생성** — /blog/:slug URLs 포함 | 중간 |
-| 9 | **Organization 스키마 강화** — `founders`, `foundingDate`, `sameAs`, `contactPoint` 추가 | 중간 |
-| 10 | **Amplify 보안 헤더** — X-Content-Type-Options, Referrer-Policy 추가 | 낮음 |
-
-### 🟡 중기 (1-3개월)
-
-| # | 작업 | 예상 임팩트 |
-|---|------|-------------|
-| 11 | **고객 사례 1건** — "A셀러, ZEROGO 도입 후 품절률 X% 감소" | 매우 높음 |
-| 12 | **팀 소개 페이지** — 창업자 배경, 팀 전문성, 창업 이야기 | 높음 |
-| 13 | **쿠팡 셀러 커뮤니티 진입** — 네이버 카페, 유튜브 영상, 인스타그램 | 높음 |
-| 14 | **블로그 콘텐츠 캘린더** — 격주 1편 (연 26편 목표) | 높음 |
-| 15 | **SSR/SSG 검토** — Next.js 또는 Astro 마이그레이션 (크롤러 가시성) | 중간 |
-
----
-
-## 즉시 구현 가능한 `llms.txt` 초안
-
+### Organization — add logo, description, knowsAbout, expanded sameAs
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "(주) 뭉클랩",
+  "legalName": "Moonklabs Co., Ltd.",
+  "url": "https://www.zerogo.ai",
+  "logo": "https://www.zerogo.ai/logo.png",
+  "description": "ZEROGO는 쿠팡 로켓그로스 판매자를 위한 AI 품절 방지 에이전트로, 품절 위험을 감지하고 발주 타이밍을 자동으로 판단합니다.",
+  "email": "sellerking@moonklabs.com",
+  "sameAs": [
+    "https://github.com/moonklabs",
+    "https://www.linkedin.com/company/moonklabs",
+    "https://www.crunchbase.com/organization/moonklabs"
+  ],
+  "knowsAbout": ["AI 재고관리", "쿠팡 로켓그로스", "품절 방지", "발주 타이밍", "이커머스 물류"]
+}
 ```
-# ZEROGO AI
 
-> 쿠팡 로켓그로스 판매자를 위한 품절 방지 AI 에이전트
+### SoftwareApplication — add subcategory, languages, rating (when available)
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ZEROGO",
+  "url": "https://www.zerogo.ai",
+  "applicationCategory": "BusinessApplication",
+  "applicationSubcategory": "Inventory Management Software",
+  "operatingSystem": "Web",
+  "availableLanguage": ["ko", "en"],
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW", "url": "https://app.zerogo.ai" },
+  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "REPLACE", "ratingCount": "REPLACE" },
+  "publisher": { "@type": "Organization", "name": "Moonklabs Co., Ltd." }
+}
+```
 
-## 서비스 개요
-
-ZEROGO는 쿠팡 로켓그로스 판매자의 재고 소진(품절)을 사전에 방지하는 AI 에이전트입니다.
-판매 속도, 현재 재고, 예측 품절일, 발주 마감일을 분석해 "오늘 발주할 상품"을 우선순위 
-순서로 알려줍니다.
-
-## 핵심 기능
-
-- **AI 발주 의사결정**: 매일 아침 오늘 발주할 상품을 리스크 순으로 제안
-- **실시간 스파이크 감지**: 주문 급증 감지 즉시 재고 예측 재계산 및 알림
-- **카카오 + 웹 알림**: 위험 상품 발생 시 카카오 푸시 + 워크스페이스 큐 알림
-- **원클릭 처리**: 발주확인 / 홀딩 / 발주완료 원클릭 기록
-
-## 주요 문서
-
-- 홈페이지: https://zerogo.ai
-- 블로그: https://zerogo.ai/blog
-- 문의: sellerking@moonklabs.com
-
-## 회사 정보
-
-운영사: (주) 뭉클랩 (Moonklabs Co., Ltd.)  
-대표: 윤도선  
-소재지: 경기도 고양시, 대한민국
+### BlogPosting — author as Person (E-E-A-T)
+```json
+"author": {
+  "@type": "Person",
+  "name": "REPLACE_AUTHOR_NAME",
+  "jobTitle": "REPLACE_TITLE",
+  "worksFor": { "@type": "Organization", "name": "Moonklabs Co., Ltd." },
+  "url": "https://www.zerogo.ai/authors/REPLACE_SLUG"
+}
 ```
 
 ---
 
-## 3개월 목표 점수
-
-현재 집중 실행 시 달성 가능한 목표:
-
-| 카테고리 | 현재 | 3개월 목표 |
-|----------|------|------------|
-| AI 인용 가능성 & 가시성 | 20 | 55 |
-| 브랜드 권위 신호 | 5 | 25 |
-| 콘텐츠 품질 & E-E-A-T | 38 | 65 |
-| 기술 기반 | 60 | 82 |
-| 구조화 데이터 | 65 | 85 |
-| 플랫폼 최적화 | 20 | 50 |
-| **종합 GEO 점수** | **31** | **57** |
+## Quick-Win Bundle (all in-repo, ~half a day, est. +8-10 to composite)
+- Canonical host fix (CRITICAL #1)
+- Organization `logo` + `description` + expanded `sameAs`
+- robots.txt `Content-Signal`
+- `/llms-full.txt`
+- Homepage worked-example numbers
 
 ---
 
-*감사합니다: 이 보고서는 공개 데이터(robots.txt, sitemap.xml, 홈페이지 HTML, 웹 검색)만 사용해 작성되었습니다.*
+## Methodology
+Phase 1 discovery (curl: headers, robots.txt, sitemap.xml, llms.txt) → Phase 2 five parallel specialist subagents (AI Visibility, Platform, Technical, Content, Schema) → Phase 3 weighted synthesis. Composite = AI Citability&Visibility 25% · Brand 20% · Content/E-E-A-T 20% · Technical 15% · Schema 10% · Platform 10%.

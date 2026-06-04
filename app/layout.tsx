@@ -5,6 +5,7 @@ import {
   SITE_NAME,
   SITE_TITLE,
   SITE_DESCRIPTION,
+  LOGO_URL,
   COMPANY,
   FAQ_ITEMS,
 } from "@/lib/site";
@@ -42,6 +43,8 @@ const organizationSchema = {
   name: COMPANY.legalName,
   legalName: COMPANY.enName,
   url: SITE_URL,
+  logo: LOGO_URL,
+  description: SITE_DESCRIPTION,
   foundingDate: COMPANY.foundingDate,
   founders: [{ "@type": "Person", name: COMPANY.ceo }],
   email: COMPANY.email,
