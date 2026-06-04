@@ -55,12 +55,20 @@ export function SiteHeader() {
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [menuOpen]);
 
-  // Close on scroll
+  // Close on scroll — listener is registered immediately but only activated
+  // after 150 ms to skip tap-induced scroll events (iOS address-bar animation,
+  // Playwright click scroll, momentum scroll residue) that fire right after
+  // the hamburger tap and would otherwise close the menu instantly.
   useEffect(() => {
     if (!menuOpen) return;
-    const handleScroll = () => setMenuOpen(false);
+    let active = false;
+    const handleScroll = () => { if (active) setMenuOpen(false); };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    const id = setTimeout(() => { active = true; }, 150);
+    return () => {
+      clearTimeout(id);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, [menuOpen]);
 
   return (
