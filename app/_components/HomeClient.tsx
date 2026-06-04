@@ -112,7 +112,9 @@ export default function HomeClient() {
                   <img
                     src={HERO_IMAGE_URL}
                     alt="Zerogo Dashboard Preview"
-                    className="w-full rounded-xl shadow-sm"
+                    width={7200}
+                    height={4030}
+                    className="h-auto w-full rounded-xl shadow-sm"
                     referrerPolicy="no-referrer"
                   />
                 </div>
