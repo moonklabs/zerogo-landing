@@ -14,7 +14,13 @@ const nextConfig: NextConfig = {
   // External images are rendered with plain <img>, so Next's image optimizer
   // is not used. No remotePatterns needed.
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        source: "/:file(llms\\.txt|llms-full\\.txt)",
+        headers: [{ key: "Content-Type", value: "text/plain; charset=utf-8" }],
+      },
+    ];
   },
   // /admin (Decap CMS) is served by app/admin/route.ts (compute route) because
   // a static-file rewrite does not resolve on Amplify WEB_COMPUTE.
