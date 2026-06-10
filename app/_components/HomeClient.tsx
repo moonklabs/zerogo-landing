@@ -130,7 +130,7 @@ export default function HomeClient() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-16 text-center">
               <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                The Problem
+                왜 품절이 반복될까
               </h2>
               <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
                 이미 놓치고 있을 수 있습니다
@@ -189,7 +189,7 @@ export default function HomeClient() {
             <div className="grid items-center gap-16 lg:grid-cols-2">
               <motion.div {...fadeIn}>
                 <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                  Core Insight
+                  문제는 재고보다 발주 판단입니다
                 </h2>
                 <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
                   문제는 재고가 아닙니다
@@ -263,12 +263,62 @@ export default function HomeClient() {
           </div>
         </section>
 
+        {/* Terminology Section */}
+        <section className="border-y border-neutral-100 bg-neutral-50 py-16 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 text-center">
+              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
+                핵심 용어
+              </h2>
+              <p className="mt-3 text-xl font-bold tracking-tight text-black sm:mt-4 sm:text-2xl">
+                로켓그로스 재고 운영에 꼭 알아야 할 개념
+              </p>
+            </div>
+            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  term: "국내총재고",
+                  def: "국내에 있는 전체 재고 수량. 마켓재고와 입고중 재고를 합산한 값. 품절일 계산의 기준이 아닙니다.",
+                },
+                {
+                  term: "마켓재고",
+                  def: "쿠팡 물류센터에 입고 완료되어 지금 바로 판매 가능한 재고. 예상 품절일 계산의 실제 기준입니다.",
+                },
+                {
+                  term: "입고중 재고",
+                  def: "발주 완료 후 쿠팡 센터에 아직 도착하지 않은 재고. 리드타임 동안은 판매가 불가능합니다.",
+                },
+                {
+                  term: "판매 가능 재고",
+                  def: "지금 이 순간 실제로 고객에게 판매될 수 있는 재고. 일반적으로 마켓재고와 동일합니다.",
+                },
+                {
+                  term: "예상 품절일",
+                  def: "현재 마켓재고를 일평균 판매량으로 나누어 계산한 품절 예정일. 발주 마감일의 기준이 됩니다.",
+                },
+                {
+                  term: "발주 마감일",
+                  def: "품절 전에 신규 재고가 입고되려면 반드시 발주를 완료해야 하는 기한. 예상 품절일에서 리드타임을 뺀 날짜입니다.",
+                },
+              ].map(({ term, def }) => (
+                <div
+                  key={term}
+                  className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6"
+                >
+                  <dt className="text-sm font-bold text-black sm:text-base">{term}</dt>
+                  <dd className="mt-2 text-sm leading-relaxed text-black/70">{def}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </section>
+
         {/* Features Section */}
         <section id="how" className="bg-neutral-50 py-24 lg:py-32">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center sm:mb-16">
               <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                How it works
+                오늘 먼저 봐야 할 SKU를 이렇게 정리합니다
               </h2>
               <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
                 데이터를 쌓는 게 아니라,
@@ -383,7 +433,7 @@ export default function HomeClient() {
           <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
             <div className="mb-12 text-center sm:mb-16">
               <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                Guide
+                로켓그로스 재고 운영 가이드
               </h2>
               <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
                 재고 운영 가이드
