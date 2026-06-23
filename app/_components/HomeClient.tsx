@@ -16,7 +16,6 @@ import {
 import { useState, useEffect } from "react";
 import {
   LOGO_URL,
-  HERO_IMAGE_URL,
   APP_URL_PROD,
   APP_URL_DEV,
   FAQ_ITEMS,
@@ -71,31 +70,20 @@ export default function HomeClient() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <div className="mb-6 inline-flex items-center rounded-full border border-neutral-200 bg-neutral-50 px-4 py-1.5 text-sm font-medium text-black">
-                쿠팡 로켓그로스 셀러 전용
-              </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-black sm:text-6xl lg:text-7xl leading-[1.3] sm:leading-tight">
-                로켓그로스 품절 전에,<br />
-                <span className="text-brand">오늘 발주할 상품을 확인하세요</span>
+              <h1 className="text-[2rem] font-extrabold leading-[1.2] tracking-tight text-black sm:text-5xl lg:text-6xl xl:text-7xl">
+                <span className="inline-block">로켓그로스</span>{" "}
+                <span className="inline-block text-brand">품절방지 솔루션</span>
               </h1>
-              <p className="mx-auto mt-6 max-w-4xl text-base sm:text-xl lg:text-[18pt] leading-relaxed text-black/80">
-                쿠팡 Wing과 엑셀을 오가며 계산하지 않아도 됩니다.
-                <br />
-                오늘 발주할 상품과 추천 수량을 우선순위로 정리합니다.
+              <p className="mx-auto mt-7 max-w-4xl text-base font-medium leading-relaxed text-black/70 sm:text-lg lg:text-xl">
+                오늘 발주할 상품과 수량을 즉시 확인하세요
               </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+              <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <a
                   href={appUrl}
-                  className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base sm:px-8 sm:py-4 sm:text-lg font-semibold text-white transition hover:opacity-90"
+                  className="group inline-flex w-full items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:opacity-90 sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
                 >
                   오늘 발주할 상품 확인하기
-                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition group-hover:translate-x-1" />
-                </a>
-                <a
-                  href="#guide"
-                  className="inline-flex w-full sm:w-auto items-center justify-center rounded-full border border-neutral-200 bg-white px-6 py-3.5 text-base sm:px-8 sm:py-4 sm:text-lg font-semibold text-black transition hover:bg-neutral-50"
-                >
-                  재고 운영 가이드 보기
+                  <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1 sm:h-5 sm:w-5" />
                 </a>
               </div>
             </motion.div>
@@ -108,15 +96,20 @@ export default function HomeClient() {
             >
               <div className="relative mx-auto max-w-5xl">
                 <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl sm:p-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={HERO_IMAGE_URL}
-                    alt="Zerogo Dashboard Preview"
+                  <video
+                    className="h-auto w-full rounded-xl shadow-sm"
                     width={7200}
                     height={4030}
-                    className="h-auto w-full rounded-xl shadow-sm"
-                    referrerPolicy="no-referrer"
-                  />
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-label="ZEROGO 대시보드 데모 영상"
+                  >
+                    <source src="/zerogo_demo.mp4" type="video/mp4" />
+                    브라우저가 영상을 지원하지 않습니다.
+                  </video>
                 </div>
                 <div className="absolute -top-6 -right-6 hidden h-24 w-24 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>
                 <div className="absolute -bottom-10 -left-10 hidden h-40 w-40 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>

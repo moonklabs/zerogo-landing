@@ -82,7 +82,7 @@ export function SiteHeader() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <div className="flex flex-1 items-center">
+        <div className="flex flex-1 items-center gap-2">
           <Link href="/" className="shrink-0" onClick={() => setMenuOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -92,6 +92,12 @@ export function SiteHeader() {
               referrerPolicy="no-referrer"
             />
           </Link>
+          <span
+            className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-brand ring-1 ring-brand/20 sm:text-xs"
+            aria-label="베타 버전"
+          >
+            Beta
+          </span>
         </div>
 
         {/* Desktop nav */}
