@@ -96,20 +96,30 @@ export default function HomeClient() {
             >
               <div className="relative mx-auto max-w-5xl">
                 <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl sm:p-4">
-                  <video
-                    className="h-auto w-full rounded-xl shadow-sm"
-                    width={7200}
-                    height={4030}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    aria-label="ZEROGO 대시보드 데모 영상"
-                  >
-                    <source src="/zerogo_demo.mp4" type="video/mp4" />
-                    브라우저가 영상을 지원하지 않습니다.
-                  </video>
+                  <div className="relative overflow-hidden rounded-xl shadow-sm">
+                    <video
+                      className="h-auto w-full"
+                      width={7200}
+                      height={4030}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      aria-label="ZEROGO 대시보드 데모 영상"
+                    >
+                      <source src="/zerogo_demo.mp4" type="video/mp4" />
+                      브라우저가 영상을 지원하지 않습니다.
+                    </video>
+                    <div className="absolute left-3 top-3 rounded-full bg-brand px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm shadow-brand/20 ring-1 ring-white/30 backdrop-blur sm:left-5 sm:top-5 sm:text-xs">
+                      실제 데모 화면
+                    </div>
+                    <div className="absolute inset-x-4 bottom-4 flex justify-center sm:bottom-6">
+                      <div className="rounded-full bg-black/70 px-4 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur sm:px-5 sm:text-sm">
+                        오늘 발주할 상품이 자동으로 정리됩니다
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="absolute -top-6 -right-6 hidden h-24 w-24 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>
                 <div className="absolute -bottom-10 -left-10 hidden h-40 w-40 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>
