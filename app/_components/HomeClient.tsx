@@ -483,7 +483,7 @@ export default function HomeClient() {
                     href={appUrl}
                     className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-8 py-4 text-base sm:text-lg font-semibold text-white transition hover:opacity-90 shadow-lg shadow-brand/20"
                   >
-                    지금 무료로 시작하기
+                    베타 무료로 시작하기
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition group-hover:translate-x-1" />
                   </a>
                 </div>
@@ -509,13 +509,21 @@ export default function HomeClient() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3 sm:space-y-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={LOGO_URL}
-                alt="ZEROGO"
-                className="h-5 w-auto sm:h-6 lg:h-8"
-                referrerPolicy="no-referrer"
-              />
+              <div className="flex items-center gap-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={LOGO_URL}
+                  alt="ZEROGO"
+                  className="h-5 w-auto sm:h-6 lg:h-8"
+                  referrerPolicy="no-referrer"
+                />
+                <span
+                  className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-brand ring-1 ring-brand/20 sm:text-xs"
+                  aria-label="베타 버전"
+                >
+                  Beta
+                </span>
+              </div>
               <p className="text-xs sm:text-sm leading-relaxed text-black/80">
                 재고를 보여주는 도구가 아니라,
                 <br className="hidden sm:block" />
