@@ -72,7 +72,7 @@ export default function HomeClient() {
             >
               <h1 className="text-[2rem] font-extrabold leading-[1.2] tracking-tight text-black sm:text-5xl lg:text-6xl xl:text-7xl">
                 <span className="inline-block">로켓그로스</span>{" "}
-                <span className="inline-block text-brand">품절방지 솔루션</span>
+                <span className="inline-block text-brand">품절 방지 솔루션</span>
               </h1>
               <p className="mx-auto mt-7 max-w-4xl text-base font-medium leading-relaxed text-black/70 sm:text-lg lg:text-xl">
                 오늘 발주할 상품과 수량을 즉시 확인하세요
@@ -330,11 +330,11 @@ export default function HomeClient() {
                   <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-black sm:text-2xl">
-                  AI 발주 판단 엔진
+                  오늘 발주할 상품 자동 계산
                 </h3>
                 <p className="mt-3 text-sm text-black/70 max-w-md sm:mt-4 sm:text-base">
-                  AI 에이전트가 현재 추정 재고, 판매량 예측 연동, 품절 예상일,
-                  발주 마감일을 분석하여 위험도를 자동으로 분류합니다.
+                  현재 추정 재고, 최근 판매 속도, 예상 품절일, 발주 마감일을
+                  계산해 오늘 먼저 확인해야 할 상품을 정리합니다.
                 </p>
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-4 sm:gap-4">
                   {[
@@ -363,11 +363,11 @@ export default function HomeClient() {
                   <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-white sm:text-2xl">
-                  스파이크 감지
+                  갑작스러운 주문 증가 감지
                 </h3>
                 <p className="mt-3 text-sm text-white/70 sm:mt-4 sm:text-base">
-                  주문 속도 급증을 실시간으로 감지하고 재계산을 트리거하여 긴급
-                  알림을 보냅니다.
+                  평소보다 주문 속도가 빨라지는 상품을 감지해 품절 위험을 다시
+                  계산하고 긴급 알림을 보냅니다.
                 </p>
               </motion.div>
 
@@ -381,11 +381,11 @@ export default function HomeClient() {
                   <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-white sm:text-2xl">
-                  Push + Workspace
+                  카카오 알림과 웹 대시보드
                 </h3>
                 <p className="mt-3 text-sm text-white/70 sm:mt-4 sm:text-base">
-                  카카오 알림과 데스크탑 웹 워크스페이스를 통해 우선순위 큐를
-                  제공합니다.
+                  카카오톡으로 중요한 상품을 먼저 알려주고, 웹 대시보드에서
+                  우선순위대로 확인할 수 있습니다.
                 </p>
               </motion.div>
 
@@ -399,11 +399,11 @@ export default function HomeClient() {
                   <MousePointer2 className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-black sm:text-2xl">
-                  최소 액션 로깅
+                  클릭 한 번으로 처리 상태 기록
                 </h3>
                 <p className="mt-3 text-sm text-black/70 max-w-md sm:mt-4 sm:text-base">
-                  확인 완료, 오늘은 보류, 발주 완료 등 복잡한 관리 없이 클릭
-                  한 번으로 판단을 기록하세요.
+                  확인 완료, 오늘은 보류, 발주 완료 같은 처리 상태를 클릭 한
+                  번으로 남겨 팀과 공유할 수 있습니다.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
                   <div className="rounded-full bg-brand/10 px-3 py-1.5 text-xs font-bold text-brand sm:px-4 sm:py-2 sm:text-sm">
@@ -445,9 +445,8 @@ export default function HomeClient() {
                   >
                     {faq.q}
                     <ChevronDown
-                      className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 ml-4 text-neutral-400 transition-transform ${
-                        activeFaq === i ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 ml-4 text-neutral-400 transition-transform ${activeFaq === i ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
                   {activeFaq === i && (
@@ -470,7 +469,7 @@ export default function HomeClient() {
 
               <div className="relative z-10 flex flex-col items-center">
                 <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-                  이미 늦었을 수 있습니다
+                  다음 품절 전에 먼저 확인하세요
                 </h2>
                 <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
                   다음 품절은 재고 숫자를 못 봐서가 아니라 발주 타이밍을 놓쳐서
@@ -518,9 +517,9 @@ export default function HomeClient() {
                 referrerPolicy="no-referrer"
               />
               <p className="text-xs sm:text-sm leading-relaxed text-black/80">
-                재고를 보여주는 도구가 아니라, 품절 위험을 먼저 감지하
+                재고를 보여주는 도구가 아니라,
                 <br className="hidden sm:block" />
-                고 오늘의 발주 판단을 정리해주는 AI 에이전트
+                품절 위험을 먼저 감지하고 오늘의 발주 판단을 정리해주는 AI 에이전트
               </p>
             </div>
 
