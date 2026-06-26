@@ -21,13 +21,39 @@ import {
   FAQ_ITEMS,
 } from "@/lib/site";
 import { SiteHeader } from "@/app/_components/BlogChrome";
+import {
+  buildAttributedAppUrl,
+  captureLandingCtaClicked,
+  type LandingInitialAttribution,
+  type LandingCta,
+} from "@/lib/activation-attribution";
 
-export default function HomeClient() {
+const HERO_CTA: LandingCta = {
+  id: "home_hero_primary",
+  label: "오늘 발주할 상품 확인하기",
+};
+const BOTTOM_CTA: LandingCta = {
+  id: "home_bottom_primary",
+  label: "베타 무료로 시작하기",
+};
+
+type HomeClientProps = {
+  initialAttribution?: LandingInitialAttribution;
+};
+
+export default function HomeClient({ initialAttribution }: HomeClientProps) {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
+  const [heroHref, setHeroHref] = useState(() =>
+    buildAttributedAppUrl(APP_URL_PROD, HERO_CTA, initialAttribution)
+  );
+  const [bottomHref, setBottomHref] = useState(() =>
+    buildAttributedAppUrl(APP_URL_PROD, BOTTOM_CTA, initialAttribution)
+  );
 
   // Hydration-safe app URL resolution
   useEffect(() => {
+    let nextAppUrl = APP_URL_PROD;
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
       if (
@@ -35,11 +61,14 @@ export default function HomeClient() {
         hostname.includes("127.0.0.1") ||
         hostname.includes("dev")
       ) {
-        setAppUrl(APP_URL_DEV);
+        nextAppUrl = APP_URL_DEV;
       } else {
-        setAppUrl(APP_URL_PROD);
+        nextAppUrl = APP_URL_PROD;
       }
     }
+    setAppUrl(nextAppUrl);
+    setHeroHref(buildAttributedAppUrl(nextAppUrl, HERO_CTA));
+    setBottomHref(buildAttributedAppUrl(nextAppUrl, BOTTOM_CTA));
   }, []);
 
   const fadeIn = {
@@ -58,7 +87,7 @@ export default function HomeClient() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-900 selection:bg-[#363636] selection:text-white">
-      <SiteHeader />
+      <SiteHeader initialAttribution={initialAttribution} />
 
       <main>
         {/* Hero Section */}
@@ -79,7 +108,11 @@ export default function HomeClient() {
               </p>
               <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row sm:gap-4">
                 <a
-                  href={appUrl}
+                  href={heroHref}
+                  onClick={(event) => {
+                    event.currentTarget.href = buildAttributedAppUrl(appUrl, HERO_CTA);
+                    captureLandingCtaClicked(HERO_CTA);
+                  }}
                   className="group inline-flex w-full items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:opacity-90 sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
                 >
                   오늘 발주할 상품 확인하기
@@ -490,7 +523,11 @@ export default function HomeClient() {
 
                 <div className="mt-10 flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
                   <a
-                    href={appUrl}
+                    href={bottomHref}
+                    onClick={(event) => {
+                      event.currentTarget.href = buildAttributedAppUrl(appUrl, BOTTOM_CTA);
+                      captureLandingCtaClicked(BOTTOM_CTA);
+                    }}
                     className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-8 py-4 text-base sm:text-lg font-semibold text-white transition hover:opacity-90 shadow-lg shadow-brand/20"
                   >
                     베타 무료로 시작하기
