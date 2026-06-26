@@ -17,7 +17,9 @@ import {
   COMPANY,
 } from "@/lib/site";
 import {
+  buildCalculatorShareCopiedEvent,
   buildCalculatorShareUrl,
+  buildOrderTimingCalculatedEvent,
   calculateOrderTiming,
   DEFAULT_LEAD_DAYS,
   DEFAULT_SAFETY_DAYS,
@@ -27,6 +29,13 @@ import {
   ShareKey,
 } from "@/lib/order-timing-calculator";
 import { BlogFooter, SiteHeader } from "@/app/_components/BlogChrome";
+import {
+  buildAttributedAppUrl,
+  captureLandingCtaClicked,
+  type LandingCta,
+  type LandingInitialAttribution,
+} from "@/lib/activation-attribution";
+import { pushGtmEvent } from "@/lib/gtm";
 
 type FormState = {
   stock: string;
@@ -44,6 +53,15 @@ const initialForm: FormState = {
   target: String(DEFAULT_TARGET_DAYS),
 };
 
+const CALCULATOR_BETA_CTA: LandingCta = {
+  id: "calculator_beta_primary",
+  label: "무료 베타 신청하기",
+};
+
+type OrderTimingCalculatorClientProps = {
+  initialAttribution?: LandingInitialAttribution;
+};
+
 const statusTone: Record<OrderTimingResult["status"], string> = {
   danger: "border-red-200 bg-red-50 text-red-700",
   reorder: "border-red-200 bg-red-50 text-red-700",
@@ -58,12 +76,17 @@ const statusDot: Record<OrderTimingResult["status"], string> = {
   safe: "bg-emerald-500",
 };
 
-export default function OrderTimingCalculatorClient() {
+export default function OrderTimingCalculatorClient({
+  initialAttribution,
+}: OrderTimingCalculatorClientProps) {
   const [form, setForm] = useState<FormState>(initialForm);
   const [result, setResult] = useState<OrderTimingResult | null>(null);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [betaUrl, setBetaUrl] = useState(APP_URL_PROD);
+  const [betaHref, setBetaHref] = useState(() =>
+    buildAttributedAppUrl(APP_URL_PROD, CALCULATOR_BETA_CTA, initialAttribution)
+  );
   const [shareUrl, setShareUrl] = useState(
     "https://www.zerogo.ai/order-timing-calculator?utm_source=share&utm_medium=copy&utm_campaign=calc_viral"
   );
@@ -71,13 +94,14 @@ export default function OrderTimingCalculatorClient() {
 
   useEffect(() => {
     const hostname = window.location.hostname;
-    setBetaUrl(
+    const nextBetaUrl =
       hostname.includes("localhost") ||
-        hostname.includes("127.0.0.1") ||
-        hostname.includes("dev")
+      hostname.includes("127.0.0.1") ||
+      hostname.includes("dev")
         ? APP_URL_DEV
-        : APP_URL_PROD
-    );
+        : APP_URL_PROD;
+    setBetaUrl(nextBetaUrl);
+    setBetaHref(buildAttributedAppUrl(nextBetaUrl, CALCULATOR_BETA_CTA));
     setShareUrl(buildCalculatorShareUrl(window.location.origin, window.location.pathname));
   }, []);
 
@@ -131,8 +155,14 @@ export default function OrderTimingCalculatorClient() {
       return;
     }
 
+    const input = { stock, daily, lead, safety, target };
+    const nextResult = calculateOrderTiming(input);
     setError("");
-    setResult(calculateOrderTiming({ stock, daily, lead, safety, target }));
+    setResult(nextResult);
+    pushGtmEvent(
+      "order_timing_calculated",
+      buildOrderTimingCalculatedEvent(input, nextResult)
+    );
   }
 
   function resetForm() {
@@ -164,15 +194,31 @@ export default function OrderTimingCalculatorClient() {
   }
 
   function copyShare(key: ShareKey) {
+    if (result) {
+      pushGtmEvent(
+        "calculator_share_copied",
+        buildCalculatorShareCopiedEvent({ action: "message", result })
+      );
+    }
     copyText(
       `${SHARE_MESSAGES[key]}${shareUrl}`,
       "공유 문구가 복사됐어요. 카톡, 카페, 스레드에 붙여넣기"
     );
   }
 
+  function copyShareLink() {
+    if (result) {
+      pushGtmEvent(
+        "calculator_share_copied",
+        buildCalculatorShareCopiedEvent({ action: "link", result })
+      );
+    }
+    copyText(shareUrl, "링크가 복사됐어요.");
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 selection:bg-brand selection:text-white">
-      <SiteHeader />
+      <SiteHeader initialAttribution={initialAttribution} />
 
       <main>
         <section className="mx-auto grid max-w-7xl items-start gap-8 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8 lg:py-6">
@@ -293,7 +339,14 @@ export default function OrderTimingCalculatorClient() {
                 발주할 상품, 권장 발주 수량을 카카오톡으로 알려드립니다.
               </p>
               <a
-                href={betaUrl}
+                href={betaHref}
+                onClick={(event) => {
+                  event.currentTarget.href = buildAttributedAppUrl(
+                    betaUrl,
+                    CALCULATOR_BETA_CTA
+                  );
+                  captureLandingCtaClicked(CALCULATOR_BETA_CTA);
+                }}
                 className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-brand px-5 py-3.5 text-sm font-extrabold text-white transition hover:opacity-90"
               >
                 무료 베타 신청하기
@@ -315,7 +368,7 @@ export default function OrderTimingCalculatorClient() {
               shareMessage={shareMessage}
               shareUrl={shareUrl}
               copyShare={copyShare}
-              copyText={copyText}
+              copyShareLink={copyShareLink}
             />
             <CalculationMethodCard />
           </section>
@@ -422,13 +475,13 @@ function ResultCard({
   shareMessage,
   shareUrl,
   copyShare,
-  copyText,
+  copyShareLink,
 }: {
   result: OrderTimingResult;
   shareMessage: string;
   shareUrl: string;
   copyShare: (key: ShareKey) => void;
-  copyText: (text: string, message: string) => void;
+  copyShareLink: () => void;
 }) {
   return (
     <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-5 shadow-sm sm:p-6">
@@ -480,7 +533,7 @@ function ResultCard({
           </button>
           <button
             type="button"
-            onClick={() => copyText(shareUrl, "링크가 복사됐어요.")}
+            onClick={copyShareLink}
             className="inline-flex items-center justify-center rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-extrabold text-black/70 transition hover:bg-neutral-50"
           >
             <Copy className="mr-2 h-4 w-4" />

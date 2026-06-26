@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GoogleTagManager } from "@/app/_components/GoogleTagManager";
 import {
   SITE_URL,
   SITE_NAME,
@@ -91,6 +92,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className="font-sans antialiased">
+        <GoogleTagManager />
         {children}
         <script
           type="application/ld+json"

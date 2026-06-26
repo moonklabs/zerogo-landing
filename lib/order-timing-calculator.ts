@@ -126,3 +126,44 @@ export function calculateOrderTiming(
 export function buildCalculatorShareUrl(origin: string, pathname: string) {
   return `${origin}${pathname}?utm_source=share&utm_medium=copy&utm_campaign=calc_viral`;
 }
+
+export function buildOrderTimingCalculatedEvent(
+  input: OrderTimingInput,
+  result: OrderTimingResult
+) {
+  return {
+    category: "activation",
+    funnel: "calculator",
+    step: "order_timing_calculated",
+    result: result.status,
+    calculator_status: result.status,
+    calculator_share_key: result.shareKey,
+    days_left: Number(result.daysLeft.toFixed(2)),
+    days_until_reorder: Number(result.daysUntilReorder.toFixed(2)),
+    buffer_days: result.bufferDays,
+    target_days: result.targetDays,
+    recommend_qty: result.recommendQty,
+    input_stock: input.stock,
+    input_daily_sales: input.daily,
+    input_lead_days: input.lead,
+    input_safety_days: input.safety,
+  };
+}
+
+export function buildCalculatorShareCopiedEvent({
+  action,
+  result,
+}: {
+  action: "message" | "link";
+  result: OrderTimingResult;
+}) {
+  return {
+    category: "activation",
+    funnel: "calculator",
+    step: "calculator_share",
+    result: "copied",
+    share_action: action,
+    calculator_status: result.status,
+    calculator_share_key: result.shareKey,
+  };
+}

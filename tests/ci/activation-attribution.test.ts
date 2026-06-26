@@ -86,12 +86,14 @@ describe("landing activation attribution", () => {
       "",
       "/?utm_source=google&utm_medium=cpc&utm_campaign=rocket&email=seller@example.com&token=secret"
     );
+    Reflect.deleteProperty(window, "dataLayer");
   });
 
   afterEach(() => {
     window.localStorage.clear();
     window.sessionStorage.clear();
     vi.restoreAllMocks();
+    Reflect.deleteProperty(window, "dataLayer");
     Reflect.deleteProperty(process.env, "NEXT_PUBLIC_POSTHOG_KEY");
   });
 
@@ -220,5 +222,43 @@ describe("landing activation attribution", () => {
     expect(ctaRequest.properties.activation_journey_id).toBe(
       pageViewRequest.properties.activation_journey_id
     );
+
+    expect(window.dataLayer).toHaveLength(2);
+    expect(window.dataLayer?.[0]).toMatchObject({
+      event: "landing_page_viewed",
+      category: "activation",
+      funnel: "activation",
+      step: "landing_page",
+      result: "viewed",
+      landing_path: "/",
+      utm_source: "google",
+    });
+    expect(window.dataLayer?.[0]).not.toHaveProperty("landing_cta_id");
+    expect(window.dataLayer?.[1]).toMatchObject({
+      event: "landing_cta_clicked",
+      category: "activation",
+      funnel: "activation",
+      step: "landing_cta",
+      result: "clicked",
+      landing_cta_id: "home_hero_primary",
+    });
+    expect(window.dataLayer?.[1].activation_journey_id).toBe(
+      window.dataLayer?.[0].activation_journey_id
+    );
+    expect(JSON.stringify(window.dataLayer)).not.toContain("seller@example.com");
+    expect(JSON.stringify(window.dataLayer)).not.toContain("secret");
+  });
+
+  it("pushes GTM dataLayer events even when PostHog direct capture is disabled", () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch");
+
+    captureLandingPageViewed();
+    captureLandingCtaClicked(CTA);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(window.dataLayer?.map((entry) => entry.event)).toEqual([
+      "landing_page_viewed",
+      "landing_cta_clicked",
+    ]);
   });
 });
