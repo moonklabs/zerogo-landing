@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/posts";
 import { SITE_URL } from "@/lib/site";
 import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
+import { buildServerLandingAttribution } from "@/lib/activation-attribution";
+
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -25,8 +30,12 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function BlogListPage() {
+export default async function BlogListPage({ searchParams }: PageProps) {
   const posts = getAllPosts();
+  const initialAttribution = buildServerLandingAttribution({
+    landingPath: "/blog",
+    searchParams: await searchParams,
+  });
 
   const itemListSchema = {
     "@context": "https://schema.org",
@@ -43,7 +52,7 @@ export default async function BlogListPage() {
 
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-900">
-      <SiteHeader />
+      <SiteHeader initialAttribution={initialAttribution} />
 
       <main className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <h1 className="mb-12 text-4xl font-extrabold tracking-tight text-black sm:text-5xl">

@@ -5,9 +5,11 @@ import Link from "next/link";
 import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
 import { SITE_URL, COMPANY } from "@/lib/site";
+import { buildServerLandingAttribution } from "@/lib/activation-attribution";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateStaticParams() {
@@ -47,7 +49,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
+export default async function BlogPostPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const post = getPostBySlug(slug);
 
@@ -59,6 +61,11 @@ export default async function BlogPostPage({ params }: PageProps) {
     year: "numeric",
     month: "long",
     day: "numeric",
+  });
+  const landingPath = `/blog/${slug}`;
+  const initialAttribution = buildServerLandingAttribution({
+    landingPath,
+    searchParams: await searchParams,
   });
 
   const blogPostingSchema = {
@@ -108,7 +115,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white font-sans text-neutral-900">
-      <SiteHeader />
+      <SiteHeader initialAttribution={initialAttribution} />
 
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Link

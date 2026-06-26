@@ -5,6 +5,13 @@ import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { LOGO_URL, APP_URL_PROD, APP_URL_DEV } from "@/lib/site";
+import {
+  buildAttributedAppUrl,
+  captureLandingCtaClicked,
+  captureLandingPageViewed,
+  type LandingInitialAttribution,
+  type LandingCta,
+} from "@/lib/activation-attribution";
 
 const NAV_ITEMS = [
   { href: "/#problem", label: "문제" },
@@ -12,25 +19,40 @@ const NAV_ITEMS = [
   { href: "/#guide", label: "가이드" },
   { href: "/blog", label: "블로그", bold: true },
 ];
+const HEADER_CTA: LandingCta = {
+  id: "header_primary",
+  label: "무료로 시작하기",
+};
 
 // Shared header used across all pages.
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  initialAttribution?: LandingInitialAttribution;
+};
+
+export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
+  const [headerHref, setHeaderHref] = useState(() =>
+    buildAttributedAppUrl(APP_URL_PROD, HEADER_CTA, initialAttribution)
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    captureLandingPageViewed();
+    let nextAppUrl = APP_URL_PROD;
     const hostname = window.location.hostname;
     if (
       hostname.includes("localhost") ||
       hostname.includes("127.0.0.1") ||
       hostname.includes("dev")
     ) {
-      setAppUrl(APP_URL_DEV);
+      nextAppUrl = APP_URL_DEV;
     } else {
-      setAppUrl(APP_URL_PROD);
+      nextAppUrl = APP_URL_PROD;
     }
+    setAppUrl(nextAppUrl);
+    setHeaderHref(buildAttributedAppUrl(nextAppUrl, HEADER_CTA));
   }, []);
 
   // Close on Escape key
@@ -116,7 +138,11 @@ export function SiteHeader() {
         {/* Right cluster: CTA + hamburger */}
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
           <a
-            href={appUrl}
+            href={headerHref}
+            onClick={(event) => {
+              event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
+              captureLandingCtaClicked(HEADER_CTA);
+            }}
             className="whitespace-nowrap rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-2.5"
           >
             무료로 시작하기
