@@ -7,10 +7,9 @@ import { Menu, X } from "lucide-react";
 import { LOGO_URL, APP_URL_PROD, APP_URL_DEV } from "@/lib/site";
 
 const NAV_ITEMS = [
-  { href: "/#problem", label: "문제" },
-  { href: "/#how", label: "작동 방식" },
-  { href: "/#guide", label: "가이드" },
-  { href: "/blog", label: "블로그", bold: true },
+  { href: "/", label: "HOME" },
+  { href: "/order-timing-calculator", label: "발주 타이밍 계산기" },
+  { href: "/blog", label: "블로그" },
 ];
 
 // Shared header used across all pages.
@@ -106,7 +105,7 @@ export function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className={`transition hover:opacity-70${item.bold ? " font-bold" : ""}`}
+              className="transition hover:opacity-70"
             >
               {item.label}
             </Link>
@@ -149,7 +148,7 @@ export function SiteHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`block px-2 py-3.5 text-base font-medium text-black transition hover:text-brand${item.bold ? " font-bold" : ""}`}
+                    className="block px-2 py-3.5 text-base font-medium text-black transition hover:text-brand"
                     onClick={() => setMenuOpen(false)}
                   >
                     {item.label}
