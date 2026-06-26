@@ -29,6 +29,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
+    {
+      url: `${SITE_URL}/order-timing-calculator`,
+      lastModified: new Date("2026-06-17"),
+      changeFrequency: "monthly" as const,
+      priority: 0.9,
+    },
     ...postEntries,
   ];
 }
