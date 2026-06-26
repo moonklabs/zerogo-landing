@@ -1,3 +1,5 @@
+import { pushGtmEvent } from "@/lib/gtm";
+
 export type LandingCta = {
   id: string;
   label: string;
@@ -188,21 +190,25 @@ export function buildAttributedAppUrl(
 }
 
 export function captureLandingPageViewed(): void {
-  const key = posthogKey();
-  if (!key || typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
   const attribution = buildLandingBaseAttribution();
   if (hasCapturedLandingPageView(attribution.activation_journey_id)) return;
+  const properties = {
+    category: "activation",
+    funnel: "activation",
+    step: "landing_page",
+    result: "viewed",
+    ...attribution,
+  };
+  pushGtmEvent("landing_page_viewed", properties);
+
+  const key = posthogKey();
+  if (!key) return;
   const payload = JSON.stringify({
     api_key: key,
     event: "landing_page_viewed",
     distinct_id: attribution.landing_distinct_id,
-    properties: {
-      category: "activation",
-      funnel: "activation",
-      step: "landing_page",
-      result: "viewed",
-      ...attribution,
-    },
+    properties,
   });
   try {
     void fetch(`${POSTHOG_HOST}/capture/`, {
@@ -219,20 +225,24 @@ export function captureLandingPageViewed(): void {
 }
 
 export function captureLandingCtaClicked(cta: LandingCta): void {
-  const key = posthogKey();
-  if (!key || typeof window === "undefined") return;
+  if (typeof window === "undefined") return;
   const attribution = buildLandingAttribution(cta);
+  const properties = {
+    category: "activation",
+    funnel: "activation",
+    step: "landing_cta",
+    result: "clicked",
+    ...attribution,
+  };
+  pushGtmEvent("landing_cta_clicked", properties);
+
+  const key = posthogKey();
+  if (!key) return;
   const payload = JSON.stringify({
     api_key: key,
     event: "landing_cta_clicked",
     distinct_id: attribution.landing_distinct_id,
-    properties: {
-      category: "activation",
-      funnel: "activation",
-      step: "landing_cta",
-      result: "clicked",
-      ...attribution,
-    },
+    properties,
   });
   try {
     void fetch(`${POSTHOG_HOST}/capture/`, {

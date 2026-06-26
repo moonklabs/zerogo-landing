@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import OrderTimingCalculatorClient from "@/app/_components/OrderTimingCalculatorClient";
+import { buildServerLandingAttribution } from "@/lib/activation-attribution";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const title = "쿠팡 로켓그로스 발주 타이밍 계산기";
@@ -44,10 +45,19 @@ const calculatorSchema = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
 };
 
-export default function OrderTimingCalculatorPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function OrderTimingCalculatorPage({ searchParams }: PageProps) {
+  const initialAttribution = buildServerLandingAttribution({
+    landingPath: "/order-timing-calculator",
+    searchParams: await searchParams,
+  });
+
   return (
     <>
-      <OrderTimingCalculatorClient />
+      <OrderTimingCalculatorClient initialAttribution={initialAttribution} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(calculatorSchema) }}
