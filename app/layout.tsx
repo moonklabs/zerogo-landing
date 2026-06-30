@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ChannelTalkProvider } from "@/app/_components/ChannelTalkProvider";
 import { GoogleTagManager } from "@/app/_components/GoogleTagManager";
 import {
   SITE_URL,
@@ -94,6 +95,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <GoogleTagManager />
         {children}
+        <ChannelTalkProvider />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
