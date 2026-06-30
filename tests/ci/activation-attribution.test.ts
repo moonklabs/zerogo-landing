@@ -197,6 +197,8 @@ describe("landing activation attribution", () => {
     captureLandingCtaClicked(CTA);
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[0][0])).toBe("https://us.i.posthog.com/capture/");
+    expect(String(fetchMock.mock.calls[1][0])).toBe("https://us.i.posthog.com/capture/");
     const [pageViewRequest, ctaRequest] = fetchMock.mock.calls.map((call) =>
       JSON.parse((call[1] as RequestInit).body as string)
     );
