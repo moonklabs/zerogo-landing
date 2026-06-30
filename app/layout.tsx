@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ChannelTalkProvider } from "@/app/_components/ChannelTalkProvider";
 import { GoogleTagManager } from "@/app/_components/GoogleTagManager";
+import { PostHogSessionReplayProvider } from "@/app/_components/PostHogSessionReplayProvider";
 import {
   SITE_URL,
   SITE_NAME,
@@ -95,6 +96,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <GoogleTagManager />
         {children}
+        <PostHogSessionReplayProvider />
         <ChannelTalkProvider />
         <script
           type="application/ld+json"

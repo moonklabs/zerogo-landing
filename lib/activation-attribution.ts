@@ -189,6 +189,11 @@ export function buildAttributedAppUrl(
   return url.toString();
 }
 
+export function getLandingReplayDistinctId(): string | null {
+  if (typeof window === "undefined") return null;
+  return buildLandingBaseAttribution().landing_distinct_id ?? null;
+}
+
 export function captureLandingPageViewed(): void {
   if (typeof window === "undefined") return;
   const attribution = buildLandingBaseAttribution();
