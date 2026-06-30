@@ -19,6 +19,7 @@
     "test:e2e:ci": "playwright test --reporter=junit"
   },
   "dependencies": {
+    "@channel.io/channel-web-sdk-loader": "^2.0.2",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
