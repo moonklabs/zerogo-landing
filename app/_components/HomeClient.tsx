@@ -30,11 +30,11 @@ import {
 
 const HERO_CTA: LandingCta = {
   id: "home_hero_primary",
-  label: "오늘 발주할 상품 확인하기",
+  label: "카카오로 무료체험 시작하기",
 };
 const BOTTOM_CTA: LandingCta = {
   id: "home_bottom_primary",
-  label: "베타 무료로 시작하기",
+  label: "카카오로 무료체험 시작하기",
 };
 
 type HomeClientProps = {
@@ -113,9 +113,9 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                     event.currentTarget.href = buildAttributedAppUrl(appUrl, HERO_CTA);
                     captureLandingCtaClicked(HERO_CTA);
                   }}
-                  className="group inline-flex w-full items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:opacity-90 sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
+                  className="group inline-flex w-full items-center justify-center rounded-full bg-[#FEE500] px-6 py-3.5 text-base font-semibold text-[#191919] shadow-lg shadow-black/10 transition hover:bg-[#FADA0A] sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
                 >
-                  오늘 발주할 상품 확인하기
+                  카카오로 무료체험 시작하기
                   <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1 sm:h-5 sm:w-5" />
                 </a>
               </div>
@@ -528,9 +528,9 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                       event.currentTarget.href = buildAttributedAppUrl(appUrl, BOTTOM_CTA);
                       captureLandingCtaClicked(BOTTOM_CTA);
                     }}
-                    className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-8 py-4 text-base sm:text-lg font-semibold text-white transition hover:opacity-90 shadow-lg shadow-brand/20"
+                    className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[#FEE500] px-8 py-4 text-base sm:text-lg font-semibold text-[#191919] transition hover:bg-[#FADA0A] shadow-lg shadow-black/10"
                   >
-                    베타 무료로 시작하기
+                    카카오로 무료체험 시작하기
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition group-hover:translate-x-1" />
                   </a>
                 </div>

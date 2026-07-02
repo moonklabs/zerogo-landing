@@ -90,7 +90,7 @@ describe("landing PostHog session replay contract", () => {
   it("binds replay identity to the existing landing distinct id", () => {
     const attribution = buildLandingAttribution({
       id: "home_hero_primary",
-      label: "오늘 발주할 상품 확인하기",
+      label: "카카오로 무료체험 시작하기",
     });
 
     expect(getLandingReplayDistinctId()).toBe(attribution.landing_distinct_id);

@@ -40,6 +40,12 @@ const SERVER_ATTRIBUTION_KEYS: AttributionKey[] = [
   "referrer_domain",
 ];
 
+function hasServerInitialAttribution(
+  initialAttribution: LandingInitialAttribution
+): boolean {
+  return SERVER_ATTRIBUTION_KEYS.some((key) => Boolean(normalizeValue(initialAttribution[key])));
+}
+
 function normalizeValue(value: string | undefined): string | undefined {
   const normalized = value?.trim();
   if (!normalized) return undefined;
@@ -137,7 +143,7 @@ export function buildServerLandingAttribution({
 function buildLandingBaseAttribution(
   initialAttribution: LandingInitialAttribution = {}
 ): Record<string, string> {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || hasServerInitialAttribution(initialAttribution)) {
     const attribution: Record<string, string> = {
       entry_source: "landing",
     };

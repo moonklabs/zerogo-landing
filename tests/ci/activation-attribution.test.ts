@@ -44,7 +44,7 @@ vi.mock("motion/react", async () => {
 
 const CTA = {
   id: "home_hero_primary",
-  label: "오늘 발주할 상품 확인하기",
+  label: "카카오로 무료체험 시작하기",
 };
 
 function createStorage(): Storage {
@@ -106,7 +106,7 @@ describe("landing activation attribution", () => {
     expect(url.searchParams.get("landing_distinct_id")).toBeTruthy();
     expect(url.searchParams.get("activation_journey_id")).toBeTruthy();
     expect(url.searchParams.get("landing_cta_id")).toBe("home_hero_primary");
-    expect(url.searchParams.get("landing_cta_label")).toBe("오늘 발주할 상품 확인하기");
+    expect(url.searchParams.get("landing_cta_label")).toBe("카카오로 무료체험 시작하기");
     expect(url.searchParams.get("landing_path")).toBe("/");
     expect(url.searchParams.get("utm_source")).toBe("google");
     expect(url.searchParams.get("utm_medium")).toBe("cpc");
@@ -119,7 +119,7 @@ describe("landing activation attribution", () => {
     const first = buildLandingAttribution(CTA);
     const second = buildLandingAttribution({
       id: "home_bottom_primary",
-      label: "베타 무료로 시작하기",
+      label: "카카오로 무료체험 시작하기",
     });
 
     expect(second.landing_distinct_id).toBe(first.landing_distinct_id);
@@ -159,6 +159,36 @@ describe("landing activation attribution", () => {
         value: originalWindow,
       });
     }
+  });
+
+  it("keeps initial href attribution identical on the client hydration pass", () => {
+    const initialAttribution = buildServerLandingAttribution({
+      landingPath: "/",
+      searchParams: {
+        utm_source: "newsletter",
+        utm_medium: "email",
+      },
+    });
+    const originalWindow = globalThis.window;
+    let serverHref = "";
+    try {
+      Reflect.deleteProperty(globalThis, "window");
+      serverHref = buildAttributedAppUrl("https://app.zerogo.ai", CTA, initialAttribution);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+
+    const clientHydrationHref = buildAttributedAppUrl(
+      "https://app.zerogo.ai",
+      CTA,
+      initialAttribution
+    );
+
+    expect(clientHydrationHref).toBe(serverHref);
+    expect(new URL(clientHydrationHref).searchParams.has("landing_distinct_id")).toBe(false);
   });
 
   it("passes home initial attribution into the pre-hydration header CTA href", () => {

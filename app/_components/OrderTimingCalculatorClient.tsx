@@ -55,7 +55,7 @@ const initialForm: FormState = {
 
 const CALCULATOR_BETA_CTA: LandingCta = {
   id: "calculator_beta_primary",
-  label: "무료 베타 신청하기",
+  label: "카카오로 무료체험 시작하기",
 };
 
 type OrderTimingCalculatorClientProps = {
@@ -347,9 +347,9 @@ export default function OrderTimingCalculatorClient({
                   );
                   captureLandingCtaClicked(CALCULATOR_BETA_CTA);
                 }}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-brand px-5 py-3.5 text-sm font-extrabold text-white transition hover:opacity-90"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-[#FEE500] px-5 py-3.5 text-sm font-extrabold text-[#191919] shadow-sm shadow-black/10 transition hover:bg-[#FADA0A]"
               >
-                무료 베타 신청하기
+                카카오로 무료체험 시작하기
                 <ArrowRight className="ml-2 h-4 w-4" />
               </a>
             </div>
