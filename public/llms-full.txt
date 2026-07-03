@@ -80,7 +80,7 @@ A. 대부분의 셀러는 불안해서 매일 쿠팡에 들어가 재고를 확�
 - 홈페이지: https://www.zerogo.ai
 - 블로그: https://www.zerogo.ai/blog
 - 앱(개발): https://dev.app.zerogo.ai
-- 문의: sellerking@moonklabs.com
+- 문의: zerogo@moonklabs.com
 
 ## 회사 정보
 
@@ -89,4 +89,4 @@ A. 대부분의 셀러는 불안해서 매일 쿠팡에 들어가 재고를 확�
 - 사업자등록번호: 488-88-02579
 - 소재지: 경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩), 502호, 대한민국
 - 설립: 2024년
-- 고객 문의: sellerking@moonklabs.com
+- 고객 문의: zerogo@moonklabs.com

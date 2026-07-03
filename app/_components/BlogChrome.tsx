@@ -142,7 +142,7 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
               event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
               captureLandingCtaClicked(HEADER_CTA);
             }}
-            className="whitespace-nowrap rounded-full bg-[#FEE500] px-3 py-2 text-xs font-semibold text-[#191919] shadow-sm shadow-black/10 transition hover:bg-[#FADA0A] sm:px-5 sm:py-2.5 sm:text-sm"
+            className="whitespace-nowrap rounded-full bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-2.5 sm:text-sm"
           >
             <span className="sm:hidden">시작하기</span>
             <span className="hidden sm:inline">카카오로 무료체험 시작하기</span>

@@ -106,7 +106,7 @@ Every crawler hit must follow a 302 to reach the real page. Conflicting "preferr
   "url": "https://www.zerogo.ai",
   "logo": "https://www.zerogo.ai/logo.png",
   "description": "ZEROGO는 쿠팡 로켓그로스 판매자를 위한 AI 품절 방지 에이전트로, 품절 위험을 감지하고 발주 타이밍을 자동으로 판단합니다.",
-  "email": "sellerking@moonklabs.com",
+  "email": "zerogo@moonklabs.com",
   "sameAs": [
     "https://github.com/moonklabs",
     "https://www.linkedin.com/company/moonklabs",

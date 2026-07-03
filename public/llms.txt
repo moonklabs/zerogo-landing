@@ -31,7 +31,7 @@ ZEROGO는 "오늘 어떤 상품을 발주해야 하는가"를 먼저 알려줍�
 - 홈페이지: https://www.zerogo.ai
 - 블로그: https://www.zerogo.ai/blog
 - 앱(개발): https://dev.app.zerogo.ai
-- 문의: sellerking@moonklabs.com
+- 문의: zerogo@moonklabs.com
 
 ## 회사 정보
 

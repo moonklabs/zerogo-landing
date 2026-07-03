@@ -113,7 +113,7 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                     event.currentTarget.href = buildAttributedAppUrl(appUrl, HERO_CTA);
                     captureLandingCtaClicked(HERO_CTA);
                   }}
-                  className="group inline-flex w-full items-center justify-center rounded-full bg-[#FEE500] px-6 py-3.5 text-base font-semibold text-[#191919] shadow-lg shadow-black/10 transition hover:bg-[#FADA0A] sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
+                  className="group inline-flex w-full items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:opacity-90 sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
                 >
                   카카오로 무료체험 시작하기
                   <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1 sm:h-5 sm:w-5" />
@@ -528,7 +528,7 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                       event.currentTarget.href = buildAttributedAppUrl(appUrl, BOTTOM_CTA);
                       captureLandingCtaClicked(BOTTOM_CTA);
                     }}
-                    className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-[#FEE500] px-8 py-4 text-base sm:text-lg font-semibold text-[#191919] transition hover:bg-[#FADA0A] shadow-lg shadow-black/10"
+                    className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-8 py-4 text-base sm:text-lg font-semibold text-white transition hover:opacity-90 shadow-lg shadow-brand/20"
                   >
                     카카오로 무료체험 시작하기
                     <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition group-hover:translate-x-1" />
@@ -587,7 +587,7 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                 주소 : 경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩),
                 502호
               </p>
-              <p>고객문의 : sellerking@moonklabs.com</p>
+              <p>고객문의 : zerogo@moonklabs.com</p>
               <p className="mt-3 sm:mt-4 font-bold text-black/90">
                 @ Moongclelabs Co., Ltd. All rights reserved.
               </p>

@@ -347,7 +347,7 @@ export default function OrderTimingCalculatorClient({
                   );
                   captureLandingCtaClicked(CALCULATOR_BETA_CTA);
                 }}
-                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-[#FEE500] px-5 py-3.5 text-sm font-extrabold text-[#191919] shadow-sm shadow-black/10 transition hover:bg-[#FADA0A]"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-brand px-5 py-3.5 text-sm font-extrabold text-white transition hover:opacity-90"
               >
                 카카오로 무료체험 시작하기
                 <ArrowRight className="ml-2 h-4 w-4" />

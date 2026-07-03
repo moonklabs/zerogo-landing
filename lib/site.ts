@@ -22,7 +22,7 @@ export const COMPANY = {
   ceo: "윤도선",
   bizNo: "488-88-02579",
   address: "경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩), 502호",
-  email: "sellerking@moonklabs.com",
+  email: "zerogo@moonklabs.com",
   foundingDate: "2024",
   github: "https://github.com/moonklabs",
 } as const;
