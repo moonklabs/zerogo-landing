@@ -2,24 +2,18 @@
 
 import { motion } from "motion/react";
 import {
-  ArrowRight,
-  CheckCircle2,
   AlertTriangle,
-  Zap,
-  Bell,
-  BarChart3,
-  Clock,
-  ChevronDown,
-  ShieldCheck,
-  MousePointer2,
+  CheckCircle2,
+  HelpCircle,
+  LayoutGrid,
+  ListChecks,
+  PencilLine,
+  RotateCcw,
+  ShoppingCart,
+  TrendingDown,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import {
-  LOGO_URL,
-  APP_URL_PROD,
-  APP_URL_DEV,
-  FAQ_ITEMS,
-} from "@/lib/site";
+import { useEffect, useState, type MouseEvent } from "react";
+import { APP_URL_PROD, APP_URL_DEV, FAQ_ITEMS } from "@/lib/site";
 import { SiteHeader } from "@/app/_components/BlogChrome";
 import {
   buildAttributedAppUrl,
@@ -28,48 +22,126 @@ import {
   type LandingCta,
 } from "@/lib/activation-attribution";
 
-const HERO_CTA: LandingCta = {
-  id: "home_hero_primary",
-  label: "카카오로 무료체험 시작하기",
-};
-const BOTTOM_CTA: LandingCta = {
-  id: "home_bottom_primary",
-  label: "카카오로 무료체험 시작하기",
-};
+const CTA_LABEL = "카카오로 7일 무료체험 시작하기";
+const HERO_CTA: LandingCta = { id: "home_hero_primary", label: CTA_LABEL };
+const SOLUTION_CTA: LandingCta = { id: "home_solution_primary", label: CTA_LABEL };
+const STEPS_CTA: LandingCta = { id: "home_steps_primary", label: CTA_LABEL };
+const BOTTOM_CTA: LandingCta = { id: "home_bottom_primary", label: CTA_LABEL };
+
+const PROBLEM_CARDS = [
+  {
+    icon: TrendingDown,
+    title: "품절 후 순위가 떨어집니다",
+    desc: "한 번 끊긴 판매 흐름은 회복까지 시간이 걸립니다.",
+  },
+  {
+    icon: ShoppingCart,
+    title: "발주가 늦으면 매출이 샙니다",
+    desc: "재고가 비는 동안 노출 기회와 매출을 잃습니다.",
+  },
+  {
+    icon: ListChecks,
+    title: "계정마다 보다가 놓칩니다",
+    desc: "여러 계정과 SKU를 오가면 급한 상품이 묻힙니다.",
+  },
+  {
+    icon: HelpCircle,
+    title: "입고일을 감으로 잡습니다",
+    desc: "상품별 입고 소요 기간을 기억하지 못해 보충이 늦어집니다.",
+  },
+];
+
+const BRIEFING_CARDS = [
+  { title: "매일 아침 브리핑", desc: "긴급·주의·입고 확인 건수를 카카오로 먼저 받아봅니다." },
+  { title: "상품명까지 바로 확인", desc: "알림 안에서 오늘 봐야 할 상품 목록을 바로 확인합니다." },
+  { title: "대시보드 바로가기", desc: "알림 하단 버튼으로 대시보드에 바로 연결됩니다." },
+];
+
+const FEATURE_CARDS = [
+  { icon: AlertTriangle, title: "품절 위험 상품 자동 정리", desc: "재고와 판매 흐름을 기준으로 먼저 확인할 상품을 보여드립니다." },
+  { icon: CheckCircle2, title: "오늘 발주 검토 대상 표시", desc: "품절 전에 보충해야 할 상품을 빠르게 확인합니다." },
+  { icon: LayoutGrid, title: "여러 계정 한 화면 관리", desc: "계정마다 따로 열어보지 않아도 됩니다." },
+  { icon: null, title: "카카오 알림", desc: "중요한 상품을 놓치지 않도록 먼저 알려드립니다." },
+  { icon: PencilLine, title: "발주했어요 기록", desc: "발주 수량과 예상 도착일을 남겨 다음 알림에 반영합니다." },
+  { icon: RotateCcw, title: "입고 확인 관리", desc: "발주한 상품이 실제로 입고됐는지 확인하고 다음 판단에 반영합니다." },
+];
+
+const STEPS = [
+  { step: "STEP 1", title: "카카오로 가입", desc: "7일 무료체험이 시작됩니다." },
+  { step: "STEP 2", title: "쿠팡 계정 연동", desc: "여러 계정의 재고를 한 화면으로 모읍니다." },
+  { step: "STEP 3", title: "품절 위험 상품 확인", desc: "오늘 발주할 상품부터 확인합니다." },
+];
+
+const TRUST_POINTS = [
+  "발주는 셀러가 직접 판단하고 실행합니다.",
+  "제로고는 오늘 봐야 할 상품을 먼저 안내해 드립니다.",
+  "발주 기록은 다음 재고 보충 알림을 더 정확하게 만드는 데 사용됩니다.",
+];
+
+function useAttributedHref(
+  appUrl: string,
+  cta: LandingCta,
+  initialAttribution?: LandingInitialAttribution
+) {
+  const [href, setHref] = useState(() =>
+    buildAttributedAppUrl(APP_URL_PROD, cta, initialAttribution)
+  );
+  useEffect(() => {
+    setHref(buildAttributedAppUrl(appUrl, cta));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appUrl]);
+  return href;
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      className="overflow-hidden rounded-[18px] border border-[#e9e9e9] bg-white"
+      open={open}
+      onToggle={(event) => setOpen((event.target as HTMLDetailsElement).open)}
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-5 px-[26px] py-6 text-[18px] font-black leading-[27px] tracking-[-0.024em] text-black marker:hidden max-[640px]:px-5 max-[640px]:py-5 max-[640px]:text-[16px] [&::-webkit-details-marker]:hidden">
+        {q}
+        <span className="shrink-0 text-2xl leading-6 font-black text-brand">
+          {open ? "−" : "+"}
+        </span>
+      </summary>
+      <p className="px-[26px] pb-6 text-[16px] leading-[27px] text-[#666] max-[640px]:px-5 max-[640px]:pb-5 max-[640px]:text-[15px]">
+        {a}
+      </p>
+    </details>
+  );
+}
 
 type HomeClientProps = {
   initialAttribution?: LandingInitialAttribution;
 };
 
 export default function HomeClient({ initialAttribution }: HomeClientProps) {
-  const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
-  const [heroHref, setHeroHref] = useState(() =>
-    buildAttributedAppUrl(APP_URL_PROD, HERO_CTA, initialAttribution)
-  );
-  const [bottomHref, setBottomHref] = useState(() =>
-    buildAttributedAppUrl(APP_URL_PROD, BOTTOM_CTA, initialAttribution)
-  );
 
-  // Hydration-safe app URL resolution
   useEffect(() => {
-    let nextAppUrl = APP_URL_PROD;
-    if (typeof window !== "undefined") {
-      const hostname = window.location.hostname;
-      if (
-        hostname.includes("localhost") ||
-        hostname.includes("127.0.0.1") ||
-        hostname.includes("dev")
-      ) {
-        nextAppUrl = APP_URL_DEV;
-      } else {
-        nextAppUrl = APP_URL_PROD;
-      }
-    }
+    const hostname = window.location.hostname;
+    const nextAppUrl =
+      hostname.includes("localhost") ||
+      hostname.includes("127.0.0.1") ||
+      hostname.includes("dev")
+        ? APP_URL_DEV
+        : APP_URL_PROD;
     setAppUrl(nextAppUrl);
-    setHeroHref(buildAttributedAppUrl(nextAppUrl, HERO_CTA));
-    setBottomHref(buildAttributedAppUrl(nextAppUrl, BOTTOM_CTA));
   }, []);
+
+  const heroHref = useAttributedHref(appUrl, HERO_CTA, initialAttribution);
+  const solutionHref = useAttributedHref(appUrl, SOLUTION_CTA, initialAttribution);
+  const stepsHref = useAttributedHref(appUrl, STEPS_CTA, initialAttribution);
+  const bottomHref = useAttributedHref(appUrl, BOTTOM_CTA, initialAttribution);
+
+  const makeCtaClickHandler =
+    (cta: LandingCta) => (event: MouseEvent<HTMLAnchorElement>) => {
+      event.currentTarget.href = buildAttributedAppUrl(appUrl, cta);
+      captureLandingCtaClicked(cta);
+    };
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -79,518 +151,374 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
   };
 
   const staggerContainer = {
-    initial: { opacity: 0 },
-    whileInView: { opacity: 1 },
-    viewport: { once: true },
-    transition: { staggerChildren: 0.1 },
+    initial: {},
+    whileInView: { transition: { staggerChildren: 0.08 } },
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-neutral-900 selection:bg-[#363636] selection:text-white">
+    <div className="min-h-screen bg-white font-sans text-[#0b0b0d] selection:bg-brand/20 selection:text-brand">
       <SiteHeader initialAttribution={initialAttribution} />
 
       <main>
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* Hero */}
+        <section className="relative overflow-hidden bg-white pt-[92px] pb-[114px] max-[900px]:pt-[70px] max-[900px]:pb-[88px] max-[640px]:pt-[52px] max-[640px]:pb-[70px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
             <motion.div
-              className="text-center"
+              className="mx-auto max-w-[1045px] text-center"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <h1 className="text-[2rem] font-extrabold leading-[1.2] tracking-tight text-black sm:text-5xl lg:text-6xl xl:text-7xl">
-                <span className="inline-block">로켓그로스</span>{" "}
-                <span className="inline-block text-brand">품절 방지 솔루션</span>
+              <span className="inline-flex items-center justify-center rounded-full border border-brand/25 bg-brand/[0.03] px-[17px] py-[9px] text-[16px] font-extrabold tracking-[0.075em] text-brand uppercase max-[640px]:px-3 max-[640px]:py-2 max-[640px]:text-[12px]">
+                로켓그로스 품절 방지
+              </span>
+              <h1 className="mt-[31px] text-[70px] leading-[90px] font-black tracking-[-0.03em] text-black max-[1200px]:text-[58px] max-[1200px]:leading-[1.22] max-[900px]:text-[44px] max-[640px]:text-[34px] max-[640px]:leading-[1.24] max-[640px]:tracking-[-0.045em]">
+                여러 계정 판매로
+                <br />
+                <span className="text-brand">품절 날까 걱정이라면?</span>
               </h1>
-              <p className="mx-auto mt-7 max-w-4xl text-base font-medium leading-relaxed text-black/70 sm:text-lg lg:text-xl">
-                오늘 발주할 상품과 수량을 즉시 확인하세요
+              <p className="mx-auto mt-[31px] max-w-[1045px] text-[22px] leading-[36px] font-semibold text-black/70 max-[1200px]:text-[20px] max-[1200px]:leading-[1.65] max-[900px]:text-[18px] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+                계정마다 열어보던 재고 확인을
+                <br />
+                따로 열지 않아도, 오늘 먼저 볼 상품만 모아서 확인할 수 있습니다.
               </p>
-              <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-8 sm:flex-row sm:gap-4">
+              <div className="mt-[37px] flex justify-center">
                 <a
                   href={heroHref}
-                  onClick={(event) => {
-                    event.currentTarget.href = buildAttributedAppUrl(appUrl, HERO_CTA);
-                    captureLandingCtaClicked(HERO_CTA);
-                  }}
-                  className="group inline-flex w-full items-center justify-center rounded-full bg-brand px-6 py-3.5 text-base font-semibold text-white transition hover:opacity-90 sm:w-auto sm:px-8 sm:py-4 sm:text-lg"
+                  onClick={makeCtaClickHandler(HERO_CTA)}
+                  className="inline-flex min-h-[70px] min-w-[335px] items-center justify-center rounded-full bg-brand px-8 text-[20px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)] max-[900px]:min-h-[60px] max-[900px]:w-full max-[900px]:max-w-[335px] max-[900px]:min-w-0 max-[640px]:text-[17px]"
                 >
-                  카카오로 무료체험 시작하기
-                  <ArrowRight className="ml-2 h-4 w-4 transition group-hover:translate-x-1 sm:h-5 sm:w-5" />
+                  카카오로 7일 무료체험 시작하기 →
                 </a>
               </div>
             </motion.div>
 
             <motion.div
-              className="mt-20"
+              className="relative mx-auto mt-10 max-w-[1195px]"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 1 }}
             >
-              <div className="relative mx-auto max-w-5xl">
-                <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-2xl sm:p-4">
-                  <div className="relative overflow-hidden rounded-xl shadow-sm">
-                    <video
-                      className="h-auto w-full"
-                      width={7200}
-                      height={4030}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      aria-label="ZEROGO 대시보드 데모 영상"
-                    >
-                      <source src="/zerogo_demo.mp4" type="video/mp4" />
-                      브라우저가 영상을 지원하지 않습니다.
-                    </video>
-                    <div className="absolute left-3 top-3 rounded-full bg-brand px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm shadow-brand/20 ring-1 ring-white/30 backdrop-blur sm:left-5 sm:top-5 sm:text-xs">
-                      실제 데모 화면
-                    </div>
-                    <div className="absolute inset-x-4 bottom-4 flex justify-center sm:bottom-6">
-                      <div className="rounded-full bg-black/70 px-4 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur sm:px-5 sm:text-sm">
-                        오늘 발주할 상품이 자동으로 정리됩니다
-                      </div>
-                    </div>
+              <div
+                aria-hidden
+                className="absolute -inset-0.5 z-0 translate-x-[18px] translate-y-[18px] rounded-[38px] bg-[linear-gradient(151deg,rgba(255,86,25,0.6)_0%,rgba(0,0,0,0)_35%,rgba(255,86,25,0.24)_100%)]"
+              />
+              <div className="relative z-10 overflow-hidden rounded-[19px] border border-[#e5e5e5] bg-white p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] max-[640px]:rounded-2xl max-[640px]:p-2.5">
+                <div className="relative overflow-hidden rounded-[14px] bg-[#eef3f6] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] max-[640px]:rounded-xl">
+                  <video
+                    className="h-auto w-full"
+                    width={7200}
+                    height={4030}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    aria-label="ZEROGO 대시보드 데모 영상"
+                  >
+                    <source src="/zerogo_demo.mp4" type="video/mp4" />
+                    브라우저가 영상을 지원하지 않습니다.
+                  </video>
+                  <div className="absolute top-[23px] left-[23px] rounded-full bg-brand px-3.5 py-[5px] text-[13.3px] font-black tracking-[0.026em] text-white uppercase shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_1px_3px_rgba(255,86,25,0.2)] max-[640px]:top-2.5 max-[640px]:left-2.5 max-[640px]:px-2.5 max-[640px]:py-1 max-[640px]:text-[11px]">
+                    실제 데모 화면
+                  </div>
+                  <div className="absolute bottom-[28px] left-1/2 max-w-[calc(100%-48px)] -translate-x-1/2 rounded-full bg-black/70 px-[23px] py-2.5 text-[15.4px] font-bold whitespace-nowrap text-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)] backdrop-blur-[4px] max-[640px]:bottom-2.5 max-[640px]:left-2.5 max-[640px]:right-2.5 max-[640px]:max-w-none max-[640px]:translate-x-0 max-[640px]:text-center max-[640px]:text-[12px] max-[640px]:whitespace-normal">
+                    여러 계정에 흩어진 품절위기 상품을 한눈에 확인하실 수 있어요.
                   </div>
                 </div>
-                <div className="absolute -top-6 -right-6 hidden h-24 w-24 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>
-                <div className="absolute -bottom-10 -left-10 hidden h-40 w-40 rounded-full bg-neutral-100/50 blur-3xl lg:block"></div>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Problem Section */}
-        <section id="problem" className="bg-neutral-50 py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-16 text-center">
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                왜 품절이 반복될까
-              </h2>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
-                이미 놓치고 있을 수 있습니다
-              </p>
-            </div>
-
+        {/* Problem */}
+        <section className="bg-[#fafafa] py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-center text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-black max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+              품절은 재고를 몰라서가 아니라
+              <br />
+              발주 타이밍을 놓쳐서 생깁니다
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-center text-[20px] leading-[35px] font-semibold text-[#666] max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              재고가 아직 남아 보여도, 입고까지 걸리는 시간을 놓치면 품절은 갑자기 옵니다.
+              품절이 나면 판매 흐름이 끊기고, 순위 회복까지 시간이 걸립니다.
+            </p>
             <motion.div
-              className="grid gap-8 md:grid-cols-3"
+              className="mt-[58px] grid grid-cols-4 gap-5 max-[1200px]:grid-cols-2 max-[640px]:grid-cols-1"
               variants={staggerContainer}
               initial="initial"
               whileInView="whileInView"
+              viewport={{ once: true }}
             >
-              {[
-                {
-                  icon: <Zap className="h-6 w-6 text-brand" />,
-                  title: "갑자기 품절됩니다",
-                  description:
-                    "어제까지 괜찮던 상품도 주문 속도가 갑자기 올라가면 순식간에 품절됩니다.",
-                },
-                {
-                  icon: <Clock className="h-6 w-6 text-brand" />,
-                  title: "발주 타이밍을 놓칩니다",
-                  description:
-                    "재고 숫자는 봤는데 언제 발주해야 하는지 확신이 없어서 결국 늦습니다.",
-                },
-                {
-                  icon: <AlertTriangle className="h-6 w-6 text-brand" />,
-                  title: "매일 직접 확인해야 합니다",
-                  description:
-                    "쿠팡, 엑셀, 메모를 계속 열어봐야 안심되는 구조는 이미 비효율입니다.",
-                },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
+              {PROBLEM_CARDS.map(({ icon: Icon, title, desc }) => (
+                <motion.article
+                  key={title}
                   variants={fadeIn}
-                  className="rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8 transition hover:shadow-lg"
+                  className="min-h-[228px] rounded-[28px] border border-[#e9e9e9] bg-white p-[31px] max-[640px]:min-h-0 max-[640px]:rounded-[22px] max-[640px]:p-6"
                 >
-                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50 sm:mb-6">
-                    {item.icon}
+                  <div className="mb-[22px] flex h-[50px] w-[50px] items-center justify-center rounded-[17px] bg-brand/10 text-brand">
+                    <Icon className="h-6 w-6" />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-black/90">
-                    {item.title}
+                  <h3 className="text-[23px] leading-[31px] font-semibold tracking-[-0.044em] text-black max-[640px]:text-[21px]">
+                    {title}
                   </h3>
-                  <p className="mt-3 text-sm sm:text-base leading-relaxed text-black/70 sm:mt-4">
-                    {item.description}
-                  </p>
-                </motion.div>
+                  <p className="mt-3 text-[16px] leading-[26.4px] font-medium text-[#666]">{desc}</p>
+                </motion.article>
               ))}
             </motion.div>
           </div>
         </section>
 
-        {/* Core Insight Section */}
-        <section className="py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid items-center gap-16 lg:grid-cols-2">
-              <motion.div {...fadeIn}>
-                <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                  문제는 재고보다 발주 판단입니다
-                </h2>
-                <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
-                  문제는 재고가 아닙니다
-                </p>
-                <p className="mt-5 text-base sm:text-lg leading-relaxed text-black/80 sm:mt-6">
-                  진짜 문제는 재고 수량을 모르는 것이 아니라,{" "}
-                  <span className="font-semibold text-black underline decoration-neutral-200 underline-offset-4">
-                    언제 발주해야 하는지 확신이 없다는 것
-                  </span>
-                  입니다.
-                </p>
-                <p className="mt-4 text-base sm:text-lg leading-relaxed text-black/80 sm:mt-4">
-                  ZEROGO는 재고를 보여주는 대신 오늘 봐야 할 상품, 예상 품절일,
-                  발주 마감일, 지금 해야 할 액션을 먼저 정리합니다.
-                </p>
-
-                <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 sm:p-6">
-                  <div className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-black/40">
-                    계산 예시
-                  </div>
-                  <p className="mt-3 text-sm sm:text-base leading-relaxed text-black/80">
-                    현재 추정 재고{" "}
-                    <span className="font-bold text-black">120개</span>, 최근 7일
-                    평균 판매가{" "}
-                    <span className="font-bold text-black">하루 15개</span>라면 약{" "}
-                    <span className="font-bold text-black">8일 뒤</span> 품절됩니다.
-                    발주 후 입고까지{" "}
-                    <span className="font-bold text-black">5일</span>이 걸린다면,
-                    발주 마감일은{" "}
-                    <span className="font-bold text-brand">
-                      오늘로부터 3일 이내
-                    </span>
-                    입니다.
-                  </p>
-                  <p className="mt-2 text-xs sm:text-sm leading-relaxed text-black/55">
-                    ZEROGO는 이 계산을 모든 SKU에 대해 매일 자동으로 수행해, 오늘
-                    발주해야 할 상품만 추려서 보여줍니다.
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div
-                className="grid gap-4"
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-              >
-                <div className="rounded-3xl border border-neutral-100 bg-neutral-50 p-6 sm:p-8">
-                  <div className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-black/40">
-                    기존 방식
-                  </div>
-                  <div className="mt-2 text-xl sm:text-2xl font-bold text-black/20 line-through">
-                    재고를 보여줍니다
-                  </div>
-                </div>
-                <div className="rounded-3xl border border-neutral-900 bg-[#363636] p-6 text-white shadow-xl sm:p-8">
-                  <div className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-brand">
-                    ZEROGO AI AGENT
-                  </div>
-                  <div className="mt-2 text-xl sm:text-2xl font-bold">
-                    오늘 해야 할 행동을 알려줍니다
-                  </div>
-                  <div className="mt-4 flex items-center gap-2 text-xs sm:text-sm text-neutral-400">
-                    <CheckCircle2 className="h-4 w-4 text-brand" />
-                    판단과 실행 중심의 AI 에이전트
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Terminology Section */}
-        <section className="border-y border-neutral-100 bg-neutral-50 py-16 lg:py-20">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10 text-center">
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                핵심 용어
+        {/* Solution */}
+        <section className="w-full bg-white py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]">
+          <div className="mx-auto flex w-full max-w-[1180px] flex-row items-center justify-between gap-10 px-5 max-[1200px]:max-w-[1040px] max-[1200px]:px-6 max-[900px]:flex-col max-[900px]:items-center max-[640px]:px-[14px]">
+            <div className="flex w-[469px] shrink-0 flex-col items-start max-[1200px]:w-auto max-[1200px]:flex-1 max-[900px]:w-full max-[900px]:items-center max-[900px]:text-center">
+              <h2 className="pt-[14px] text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-black max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+                오늘 발주할 상품을
+                <br />
+                모아서 보여드립니다
               </h2>
-              <p className="mt-3 text-xl font-bold tracking-tight text-black sm:mt-4 sm:text-2xl">
-                로켓그로스 재고 운영에 꼭 알아야 할 개념
+              <p className="max-w-[470px] pt-5 text-[20px] leading-[35px] font-semibold text-[#666] max-[900px]:max-w-[640px] max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+                여러 로켓그로스 계정의 재고와 판매 흐름을 모아 품절 위험 상품을 한눈에 확인하실 수
+                있습니다.
               </p>
-            </div>
-            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                {
-                  term: "국내총재고",
-                  def: "국내에 있는 전체 재고 수량. 마켓재고와 입고중 재고를 합산한 값. 품절일 계산의 기준이 아닙니다.",
-                },
-                {
-                  term: "마켓재고",
-                  def: "쿠팡 물류센터에 입고 완료되어 지금 바로 판매 가능한 재고. 예상 품절일 계산의 실제 기준입니다.",
-                },
-                {
-                  term: "입고중 재고",
-                  def: "발주 완료 후 쿠팡 센터에 아직 도착하지 않은 재고. 리드타임 동안은 판매가 불가능합니다.",
-                },
-                {
-                  term: "판매 가능 재고",
-                  def: "지금 이 순간 실제로 고객에게 판매될 수 있는 재고. 일반적으로 마켓재고와 동일합니다.",
-                },
-                {
-                  term: "예상 품절일",
-                  def: "현재 마켓재고를 일평균 판매량으로 나누어 계산한 품절 예정일. 발주 마감일의 기준이 됩니다.",
-                },
-                {
-                  term: "발주 마감일",
-                  def: "품절 전에 신규 재고가 입고되려면 반드시 발주를 완료해야 하는 기한. 예상 품절일에서 리드타임을 뺀 날짜입니다.",
-                },
-              ].map(({ term, def }) => (
-                <div
-                  key={term}
-                  className="rounded-2xl border border-neutral-200 bg-white p-5 sm:p-6"
+              <div className="w-full max-w-[470px] pt-[30px] max-[900px]:flex max-[900px]:max-w-none max-[900px]:justify-center">
+                <a
+                  href={solutionHref}
+                  onClick={makeCtaClickHandler(SOLUTION_CTA)}
+                  className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-brand px-7 text-[16px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)]"
                 >
-                  <dt className="text-sm font-bold text-black sm:text-base">{term}</dt>
-                  <dd className="mt-2 text-sm leading-relaxed text-black/70">{def}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section id="how" className="bg-neutral-50 py-24 lg:py-32">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center sm:mb-16">
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                오늘 먼저 봐야 할 SKU를 이렇게 정리합니다
-              </h2>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
-                데이터를 쌓는 게 아니라,
-                <br className="sm:hidden" /> 오늘의 판단을 줄입니다
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <motion.div
-                variants={fadeIn}
-                initial="initial"
-                whileInView="whileInView"
-                className="col-span-1 md:col-span-2 lg:col-span-2 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 sm:mb-6">
-                  <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
-                </div>
-                <h3 className="text-xl font-bold text-black sm:text-2xl">
-                  오늘 발주할 상품 자동 계산
-                </h3>
-                <p className="mt-3 text-sm text-black/70 max-w-md sm:mt-4 sm:text-base">
-                  현재 추정 재고, 최근 판매 속도, 예상 품절일, 발주 마감일을
-                  계산해 오늘 먼저 확인해야 할 상품을 정리합니다.
-                </p>
-                <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:grid-cols-4 sm:gap-4">
-                  {[
-                    "현재 추정 재고",
-                    "최근 판매 속도",
-                    "예상 품절일",
-                    "발주 마감일",
-                  ].map((tag, i) => (
-                    <div
-                      key={i}
-                      className="rounded-xl border border-neutral-100 bg-neutral-50 px-2.5 py-1.5 text-center text-[11px] font-semibold text-black/80 sm:px-3 sm:py-2 sm:text-xs"
-                    >
-                      {tag}
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.div
-                variants={fadeIn}
-                initial="initial"
-                whileInView="whileInView"
-                className="rounded-3xl border border-neutral-800 bg-[#363636] p-6 shadow-xl sm:p-8"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/20 sm:mb-6">
-                  <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
-                </div>
-                <h3 className="text-xl font-bold text-white sm:text-2xl">
-                  갑작스러운 주문 증가 감지
-                </h3>
-                <p className="mt-3 text-sm text-white/70 sm:mt-4 sm:text-base">
-                  평소보다 주문 속도가 빨라지는 상품을 감지해 품절 위험을 다시
-                  계산하고 긴급 알림을 보냅니다.
-                </p>
-              </motion.div>
-
-              <motion.div
-                variants={fadeIn}
-                initial="initial"
-                whileInView="whileInView"
-                className="rounded-3xl border border-neutral-800 bg-[#363636] p-6 shadow-xl sm:p-8"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/20 sm:mb-6">
-                  <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
-                </div>
-                <h3 className="text-xl font-bold text-white sm:text-2xl">
-                  카카오 알림과 웹 대시보드
-                </h3>
-                <p className="mt-3 text-sm text-white/70 sm:mt-4 sm:text-base">
-                  카카오톡으로 중요한 상품을 먼저 알려주고, 웹 대시보드에서
-                  우선순위대로 확인할 수 있습니다.
-                </p>
-              </motion.div>
-
-              <motion.div
-                variants={fadeIn}
-                initial="initial"
-                whileInView="whileInView"
-                className="col-span-1 md:col-span-2 lg:col-span-2 rounded-3xl border border-neutral-200 bg-white p-6 sm:p-8"
-              >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 sm:mb-6">
-                  <MousePointer2 className="h-5 w-5 sm:h-6 sm:w-6 text-brand" />
-                </div>
-                <h3 className="text-xl font-bold text-black sm:text-2xl">
-                  클릭 한 번으로 처리 상태 기록
-                </h3>
-                <p className="mt-3 text-sm text-black/70 max-w-md sm:mt-4 sm:text-base">
-                  확인 완료, 오늘은 보류, 발주 완료 같은 처리 상태를 클릭 한
-                  번으로 남겨 팀과 공유할 수 있습니다.
-                </p>
-                <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
-                  <div className="rounded-full bg-brand/10 px-3 py-1.5 text-xs font-bold text-brand sm:px-4 sm:py-2 sm:text-sm">
-                    확인 완료
-                  </div>
-                  <div className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-bold text-black/80 sm:px-4 sm:py-2 sm:text-sm">
-                    오늘은 보류
-                  </div>
-                  <div className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-bold text-black/80 sm:px-4 sm:py-2 sm:text-sm">
-                    발주 완료
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Guide Section (FAQ) */}
-        <section id="guide" className="py-24 lg:py-32">
-          <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center sm:mb-16">
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-black/40">
-                로켓그로스 재고 운영 가이드
-              </h2>
-              <p className="mt-3 text-2xl font-bold tracking-tight text-black sm:mt-4 sm:text-4xl">
-                재고 운영 가이드
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {FAQ_ITEMS.map((faq, i) => (
-                <div
-                  key={i}
-                  className="overflow-hidden rounded-2xl border border-neutral-200"
-                >
-                  <button
-                    className="flex w-full items-center justify-between bg-white p-5 text-left text-sm font-bold text-black/90 transition hover:bg-neutral-50 sm:p-6 sm:text-base"
-                    onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                  >
-                    {faq.q}
-                    <ChevronDown
-                      className={`h-4 w-4 sm:h-5 sm:w-5 shrink-0 ml-4 text-neutral-400 transition-transform ${activeFaq === i ? "rotate-180" : ""
-                        }`}
-                    />
-                  </button>
-                  {activeFaq === i && (
-                    <div className="border-t border-neutral-100 bg-neutral-50 p-5 text-sm leading-relaxed text-black/70 sm:p-6 sm:text-base">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section id="cta" className="bg-[#363636] py-20 lg:py-32">
-          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/30 p-8 text-center shadow-2xl sm:p-16">
-              <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-brand/10 blur-3xl"></div>
-              <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-brand/10 blur-3xl"></div>
-
-              <div className="relative z-10 flex flex-col items-center">
-                <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-                  다음 품절 전에 먼저 확인하세요
-                </h2>
-                <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
-                  다음 품절은 재고 숫자를 못 봐서가 아니라 발주 타이밍을 놓쳐서
-                  발생합니다.
-                  <br />
-                  지금 ZEROGO를 시작하고 오늘 발주할 상품을 즉시 확인하세요.
-                </p>
-
-                <div className="mt-10 flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
-                  <a
-                    href={bottomHref}
-                    onClick={(event) => {
-                      event.currentTarget.href = buildAttributedAppUrl(appUrl, BOTTOM_CTA);
-                      captureLandingCtaClicked(BOTTOM_CTA);
-                    }}
-                    className="group inline-flex w-full sm:w-auto items-center justify-center rounded-full bg-brand px-8 py-4 text-base sm:text-lg font-semibold text-white transition hover:opacity-90 shadow-lg shadow-brand/20"
-                  >
-                    카카오로 무료체험 시작하기
-                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5 transition group-hover:translate-x-1" />
-                  </a>
-                </div>
-
-                <div className="mt-8 flex flex-wrap justify-center gap-6 sm:mt-10">
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-white/60">
-                    <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-brand" />
-                    간편한 로켓그로스 연동
-                  </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-white/60">
-                    <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-brand" />
-                    실시간 품절 위험 감지
-                  </div>
-                </div>
+                  카카오로 7일 무료체험 시작하기
+                </a>
               </div>
             </div>
+
+            <div
+              className="relative h-[420px] w-[616px] shrink-0 overflow-hidden rounded-[20px] border border-[#e9e9e9] bg-white max-[1200px]:h-auto max-[1200px]:w-full max-[1200px]:max-w-[616px] max-[900px]:w-full max-[900px]:max-w-[616px]"
+              style={{ boxShadow: "0px 22px 60px 0px rgba(16,16,16,0.1)" }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/home/order-preview.png"
+                alt="오늘 발주할 상품 화면"
+                className="h-full w-full object-cover max-[1200px]:aspect-[616/420] max-[1200px]:h-auto"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Briefing */}
+        <section className="w-full bg-[#4e95d9] py-[100px] max-[900px]:py-[86px] max-[640px]:py-[70px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-center text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-white max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+              매일 아침, 오늘의 재고 브리핑을
+              <br />
+              카카오로 먼저 받아보세요
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-center text-[20px] leading-[34px] font-semibold text-white/80 max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              긴급·주의·입고 확인 건수와 오늘 봐야 할 상품명을 한 번에 알려드립니다. 대시보드를 열기
+              전에 이미 무엇부터 볼지 알 수 있습니다.
+            </p>
+
+            <div className="mt-[58px] flex flex-row items-center justify-between gap-14 max-[1200px]:flex-col max-[1200px]:items-center max-[900px]:gap-10 max-[900px]:pt-[0px]">
+              <div className="flex w-[568px] shrink-0 flex-col gap-5 max-[1200px]:w-full max-[1200px]:max-w-[720px]">
+                {BRIEFING_CARDS.map(({ title, desc }) => (
+                  <div
+                    key={title}
+                    className="relative w-full rounded-2xl bg-[#3f7bc3] drop-shadow-[0px_12px_18px_rgba(11,0,158,0.1)]"
+                  >
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-2xl border border-white/10"
+                    />
+                    <div className="relative flex flex-col items-start px-[34px] pt-5 pb-[30px] max-[640px]:px-6 max-[640px]:pb-6">
+                      <p className="pt-[10px] text-[24px] leading-[32px] font-bold tracking-[-0.8px] text-white max-[640px]:text-[20px] max-[640px]:leading-[1.35]">
+                        {title}
+                      </p>
+                      <p className="text-[16px] leading-[26px] tracking-[-0.3px] text-white/80">
+                        {desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex w-[475px] shrink-0 items-center justify-center drop-shadow-[-20px_16px_10px_rgba(0,0,0,0.1)] max-[1200px]:w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/home/kakao-briefing.png"
+                  alt="제로고 카카오 알림톡 실제 메시지 예시"
+                  className="w-[299px] rounded-2xl object-cover max-[900px]:w-[min(299px,90vw)]"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="bg-[#fafafa] py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-center text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-black max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+              품절 위험을 먼저 보고
+              <br />
+              처리 상태까지 남깁니다
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-center text-[20px] leading-[35px] font-semibold text-[#666] max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              매일 모든 SKU를 다 보는 대신, 오늘 확인해야 할 상품만 우선순위로 확인하세요.
+            </p>
+            <div className="mt-[58px] grid grid-cols-3 gap-[22px] max-[1200px]:grid-cols-2 max-[640px]:grid-cols-1">
+              {FEATURE_CARDS.map(({ icon: Icon, title, desc }) => (
+                <article
+                  key={title}
+                  className="min-h-[230px] rounded-[28px] border border-[#e9e9e9] bg-white p-[31px] max-[640px]:min-h-0 max-[640px]:rounded-[22px] max-[640px]:p-6"
+                >
+                  <div className="mb-[22px] flex h-[50px] w-[50px] items-center justify-center rounded-[17px] bg-brand/10 text-brand">
+                    {Icon ? (
+                      <Icon className="h-6 w-6" />
+                    ) : (
+                      <span className="text-[15px] font-black">톡</span>
+                    )}
+                  </div>
+                  <h3 className="text-[23px] leading-[31px] font-semibold tracking-[-0.044em] text-black max-[640px]:text-[21px]">
+                    {title}
+                  </h3>
+                  <p className="mt-3 text-[16px] leading-[26.4px] font-medium text-[#666]">{desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Steps */}
+        <section className="w-full bg-white py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-center text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-black max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+              3단계면 품절 위험 상품을 확인합니다
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-center text-[20px] leading-[35px] font-semibold text-[#666] max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              가입 후 쿠팡 계정을 연동하면 오늘 발주를 검토할 상품부터 볼 수 있습니다.
+            </p>
+            <div className="mt-[58px] grid grid-cols-3 gap-[22px] max-[900px]:grid-cols-1">
+              {STEPS.map(({ step, title, desc }) => (
+                <article
+                  key={step}
+                  className="min-h-[210px] rounded-[28px] border border-[#e9e9e9] bg-white p-[31px] max-[640px]:min-h-0 max-[640px]:rounded-[22px] max-[640px]:p-6"
+                >
+                  <span className="inline-flex h-[39px] items-center justify-center rounded-full border border-brand/20 bg-brand/10 px-[15px] text-[14px] font-black text-brand">
+                    {step}
+                  </span>
+                  <h3 className="mt-5 text-[23px] leading-[31px] font-semibold tracking-[-0.044em] text-black max-[640px]:text-[21px]">
+                    {title}
+                  </h3>
+                  <p className="mt-3 text-[16px] leading-[26.4px] font-medium text-[#666]">{desc}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-[46px] text-center">
+              <a
+                href={stepsHref}
+                onClick={makeCtaClickHandler(STEPS_CTA)}
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-brand px-7 text-[16px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)]"
+              >
+                카카오로 7일 무료체험 시작하기
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust */}
+        <section className="bg-[#fafafa] py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <div className="mx-auto max-w-[980px] rounded-[34px] border border-[#e9e9e9] bg-white p-[55px] text-center max-[640px]:rounded-[26px] max-[640px]:p-[30px_20px]">
+              <span className="inline-flex h-[39px] items-center justify-center rounded-full border border-brand/20 bg-brand/10 px-[15px] text-[14px] font-black text-brand">
+                안심 안내
+              </span>
+              <h2 className="mt-[18px] text-[42px] leading-[63px] font-semibold tracking-[-0.041em] text-black max-[640px]:text-[32px] max-[640px]:leading-[1.35]">
+                발주를 대신 실행하지 않습니다
+              </h2>
+              <p className="mx-auto mt-[18px] max-w-[760px] text-[19px] leading-[33.25px] text-[#666]">
+                제로고는 로켓그로스 상품의 재고와 판매 흐름, 그리고 사용자가 남긴 발주 기록을
+                바탕으로 오늘 확인할 상품과 재고 보충 시점을 알려주는 서비스입니다.
+              </p>
+              <div className="mt-[30px] grid grid-cols-3 gap-3.5 max-[640px]:grid-cols-1">
+                {TRUST_POINTS.map((point) => (
+                  <div
+                    key={point}
+                    className="rounded-[20px] border border-[#eee] bg-[#fafafa] p-[19px] text-left text-[15px] leading-[23.25px] font-semibold text-[#555]"
+                  >
+                    {point}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="w-full bg-white py-[112px] max-[900px]:py-[86px] max-[640px]:py-[68px]" id="faq">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-center text-[48px] leading-[58.56px] font-black tracking-[-0.048em] text-black max-[900px]:text-[36px] max-[900px]:leading-[1.28] max-[900px]:tracking-[-1.5px] max-[640px]:text-[30px] max-[640px]:leading-[1.28] max-[640px]:tracking-[-1px]">
+              자주 묻는 질문
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-center text-[20px] leading-[35px] font-semibold text-[#666] max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              무료체험 전에 가장 많이 궁금해하는 내용만 정리했습니다.
+            </p>
+            <div className="mx-auto mt-[54px] flex max-w-[860px] flex-col gap-3">
+              {FAQ_ITEMS.map((faq) => (
+                <FaqItem key={faq.q} q={faq.q} a={faq.a} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="w-full bg-[#2f2f2f] py-[100px] text-center max-[900px]:py-[86px] max-[640px]:py-[70px]">
+          <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
+            <h2 className="mx-auto max-w-[820px] text-[56px] leading-[68.32px] font-black tracking-[-0.048em] text-white max-[900px]:text-[40px] max-[900px]:leading-[1.25] max-[640px]:text-[32px] max-[640px]:leading-[1.28]">
+              다음 품절 전에 먼저 확인하세요
+            </h2>
+            <p className="mx-auto mt-5 max-w-[760px] text-[20px] leading-[34px] font-semibold text-white/70 max-[900px]:text-[17px] max-[900px]:leading-[1.65] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+              계정마다 따로 보지 말고, 오늘 발주를 검토할 상품부터 한 번에 확인하세요.
+            </p>
+            <div className="mt-[34px] flex justify-center">
+              <a
+                href={bottomHref}
+                onClick={makeCtaClickHandler(BOTTOM_CTA)}
+                className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-brand px-7 text-[16px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)]"
+              >
+                카카오로 7일 무료체험 시작하기
+              </a>
+            </div>
+            <p className="mt-[22px] text-[16px] leading-6 font-bold text-white/70">
+              품절이 난 뒤 확인하면 늦습니다. 순위가 떨어지기 전에 먼저 확인하세요.
+            </p>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-100 bg-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={LOGO_URL}
-                  alt="ZEROGO"
-                  className="h-5 w-auto sm:h-6 lg:h-8"
-                  referrerPolicy="no-referrer"
-                />
-                <span
-                  className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-brand ring-1 ring-brand/20 sm:text-xs"
-                  aria-label="베타 버전"
-                >
-                  Beta
-                </span>
-              </div>
-              <p className="text-xs sm:text-sm leading-relaxed text-black/80">
-                재고를 보여주는 도구가 아니라,
-                <br className="hidden sm:block" />
-                품절 위험을 먼저 감지하고 오늘의 발주 판단을 정리해주는 AI 에이전트
-              </p>
+      <footer className="border-t border-[#e9e9e9] bg-white py-[58px]">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col items-start justify-between gap-8 px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px] lg:flex-row lg:items-end">
+          <div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://cdn.prod.website-files.com/6523c202a6a9763a268a7a7d/69d8eb3622c77fc93875d989_logo-zerogo-black.png"
+              alt="ZEROGO"
+              className="w-[140px]"
+              referrerPolicy="no-referrer"
+            />
+            <div className="mt-3.5 text-[16px] leading-[26.4px] text-[#666]">
+              품절 위험을 먼저 감지하고,
+              <br />
+              오늘의 발주 판단과 재고 보충 알림을 정리해주는 서비스
             </div>
-
-            <div className="text-left lg:text-right space-y-1 text-[11px] sm:text-xs text-black/70">
-              <p>
-                <span className="font-bold text-black/90">(주) 뭉클랩</span> |
-                대표이사 : 윤도선 | 사업자등록번호 : 488-88-02579
-              </p>
-              <p>
-                주소 : 경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩),
-                502호
-              </p>
-              <p>고객문의 : zerogo@moonklabs.com</p>
-              <p className="mt-3 sm:mt-4 font-bold text-black/90">
-                @ Moongclelabs Co., Ltd. All rights reserved.
-              </p>
+          </div>
+          <div className="text-left text-[13px] leading-[23.4px] text-[#777] lg:text-right">
+            <div>(주) 뭉클랩 | 대표이사 : 윤도선 | 사업자등록번호 : 488-88-02579</div>
+            <div>주소 : 경기도 고양시 일산동구 무궁화로 20-38(로데오탑빌딩), 502호</div>
+            <div>고객문의 : zerogo@moonklabs.com</div>
+            <div className="mt-3 font-extrabold text-[#111]">
+              © Moonklabs Co., Ltd. All Rights Reserved.
             </div>
           </div>
         </div>

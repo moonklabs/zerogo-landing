@@ -95,26 +95,22 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
   return (
     <header
       ref={headerRef}
-      className={`sticky top-0 z-50 backdrop-blur-md transition-colors duration-150 ${
-        menuOpen
-          ? "bg-white"
-          : "border-b border-neutral-100 bg-white/80"
-      }`}
+      className="sticky top-0 z-50 border-b border-black/5 bg-white/90 backdrop-blur-md"
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-[70px] max-w-[1180px] items-center justify-between px-5 max-[900px]:px-4 min-[901px]:h-[78px] min-[1201px]:h-[84px]">
         {/* Logo */}
-        <div className="flex flex-1 items-center gap-2">
+        <div className="flex flex-1 items-center gap-2.5">
           <Link href="/" className="shrink-0" onClick={() => setMenuOpen(false)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={LOGO_URL}
               alt="Zerogo"
-              className="h-6 w-auto sm:h-7 lg:h-8"
+              className="h-auto w-[132px] min-[901px]:w-[150px] min-[1201px]:w-[170px]"
               referrerPolicy="no-referrer"
             />
           </Link>
           <span
-            className="rounded-full bg-brand/10 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-brand ring-1 ring-brand/20 sm:text-xs"
+            className="inline-flex items-center justify-center rounded-full bg-brand/10 px-[9px] py-[2px] text-[12px] font-black text-brand ring-1 ring-inset ring-brand/20 min-[901px]:text-[14px]"
             aria-label="베타 버전"
           >
             Beta
@@ -122,12 +118,12 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
         </div>
 
         {/* Desktop nav */}
-        <nav className="hidden flex-1 items-center justify-center gap-8 text-sm font-medium text-black md:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-[37px] text-[15px] font-semibold text-[#111] md:flex">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="transition hover:opacity-70"
+              className="whitespace-nowrap transition hover:text-brand"
             >
               {item.label}
             </Link>
@@ -135,20 +131,19 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
         </nav>
 
         {/* Right cluster: CTA + hamburger */}
-        <div className="flex flex-1 items-center justify-end gap-2 sm:gap-4">
+        <div className="flex flex-1 items-center justify-end gap-3">
           <a
             href={headerHref}
             onClick={(event) => {
               event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
               captureLandingCtaClicked(HEADER_CTA);
             }}
-            className="whitespace-nowrap rounded-full bg-brand px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 sm:px-5 sm:py-2.5 sm:text-sm"
+            className="hidden min-h-[46px] items-center justify-center whitespace-nowrap rounded-full bg-brand px-[23px] text-[15.5px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-px hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)] md:inline-flex"
           >
-            <span className="sm:hidden">시작하기</span>
-            <span className="hidden sm:inline">카카오로 무료체험 시작하기</span>
+            무료체험 시작하기
           </a>
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full text-black transition hover:bg-neutral-100 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-brand/20 bg-brand/10 text-brand transition hover:-translate-y-px hover:bg-[#ffe8dd] md:hidden"
             aria-label={menuOpen ? "메뉴 닫기" : "메뉴 열기"}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
@@ -157,35 +152,48 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-      </div>
 
-      {/* Mobile dropdown */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.nav
-            id="mobile-menu"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-x-0 top-full z-50 border-t border-neutral-100 bg-white shadow-lg md:hidden"
-          >
-            <ul className="mx-auto max-w-7xl px-4 py-2 sm:px-6">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block px-2 py-3.5 text-base font-medium text-black transition hover:text-brand"
-                    onClick={() => setMenuOpen(false)}
+        {/* Mobile dropdown */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.nav
+              id="mobile-menu"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="absolute left-1/2 top-[calc(100%+10px)] w-[min(420px,calc(100vw-28px))] -translate-x-1/2 rounded-[22px] border border-black/10 bg-white/98 p-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.14)] backdrop-blur-lg md:hidden"
+            >
+              <ul className="flex flex-col gap-1">
+                {NAV_ITEMS.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="flex min-h-[46px] items-center rounded-2xl px-3.5 text-[15px] font-bold text-[#111] transition hover:bg-neutral-50"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href={headerHref}
+                    onClick={(event) => {
+                      event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
+                      captureLandingCtaClicked(HEADER_CTA);
+                      setMenuOpen(false);
+                    }}
+                    className="mt-2.5 flex min-h-[50px] items-center justify-center rounded-full bg-brand text-[15.5px] font-extrabold text-white"
                   >
-                    {item.label}
-                  </Link>
+                    무료체험 시작하기
+                  </a>
                 </li>
-              ))}
-            </ul>
-          </motion.nav>
-        )}
-      </AnimatePresence>
+              </ul>
+            </motion.nav>
+          )}
+        </AnimatePresence>
+      </div>
     </header>
   );
 }
