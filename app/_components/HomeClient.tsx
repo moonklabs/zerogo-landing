@@ -21,6 +21,7 @@ import {
   type LandingInitialAttribution,
   type LandingCta,
 } from "@/lib/activation-attribution";
+import type { LandingVariantSlots } from "@/lib/landing-variant";
 
 const CTA_LABEL = "카카오로 7일 무료체험 시작하기";
 const HERO_CTA: LandingCta = { id: "home_hero_primary", label: CTA_LABEL };
@@ -116,9 +117,11 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 type HomeClientProps = {
   initialAttribution?: LandingInitialAttribution;
+  // 실험 변형 슬롯 (utm_content로 발행된 문구) — null이면 기본 문구 렌더
+  variantSlots?: LandingVariantSlots | null;
 };
 
-export default function HomeClient({ initialAttribution }: HomeClientProps) {
+export default function HomeClient({ initialAttribution, variantSlots }: HomeClientProps) {
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
 
   useEffect(() => {
@@ -132,7 +135,11 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
     setAppUrl(nextAppUrl);
   }, []);
 
-  const heroHref = useAttributedHref(appUrl, HERO_CTA, initialAttribution);
+  // 변형 CTA 문구는 클릭 계측 라벨에도 그대로 실린다 (같은 id, label만 교체)
+  const heroCta: LandingCta = variantSlots?.ctaText
+    ? { id: HERO_CTA.id, label: variantSlots.ctaText }
+    : HERO_CTA;
+  const heroHref = useAttributedHref(appUrl, heroCta, initialAttribution);
   const solutionHref = useAttributedHref(appUrl, SOLUTION_CTA, initialAttribution);
   const stepsHref = useAttributedHref(appUrl, STEPS_CTA, initialAttribution);
   const bottomHref = useAttributedHref(appUrl, BOTTOM_CTA, initialAttribution);
@@ -173,22 +180,34 @@ export default function HomeClient({ initialAttribution }: HomeClientProps) {
                 로켓그로스 품절 방지
               </span>
               <h1 className="mt-[31px] text-[70px] leading-[90px] font-black tracking-[-0.03em] text-black max-[1200px]:text-[58px] max-[1200px]:leading-[1.22] max-[900px]:text-[44px] max-[640px]:text-[34px] max-[640px]:leading-[1.24] max-[640px]:tracking-[-0.045em]">
-                여러 계정 판매로
-                <br />
-                <span className="text-brand">품절 날까 걱정이라면?</span>
+                {variantSlots ? (
+                  variantSlots.headline
+                ) : (
+                  <>
+                    여러 계정 판매로
+                    <br />
+                    <span className="text-brand">품절 날까 걱정이라면?</span>
+                  </>
+                )}
               </h1>
               <p className="mx-auto mt-[31px] max-w-[1045px] text-[22px] leading-[36px] font-semibold text-black/70 max-[1200px]:text-[20px] max-[1200px]:leading-[1.65] max-[900px]:text-[18px] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
-                계정마다 열어보던 재고 확인을
-                <br />
-                따로 열지 않아도, 오늘 먼저 볼 상품만 모아서 확인할 수 있습니다.
+                {variantSlots?.subheadline ? (
+                  variantSlots.subheadline
+                ) : (
+                  <>
+                    계정마다 열어보던 재고 확인을
+                    <br />
+                    따로 열지 않아도, 오늘 먼저 볼 상품만 모아서 확인할 수 있습니다.
+                  </>
+                )}
               </p>
               <div className="mt-[37px] flex justify-center">
                 <a
                   href={heroHref}
-                  onClick={makeCtaClickHandler(HERO_CTA)}
+                  onClick={makeCtaClickHandler(heroCta)}
                   className="inline-flex min-h-[70px] min-w-[335px] items-center justify-center rounded-full bg-brand px-8 text-[20px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)] max-[900px]:min-h-[60px] max-[900px]:w-full max-[900px]:max-w-[335px] max-[900px]:min-w-0 max-[640px]:text-[17px]"
                 >
-                  카카오로 7일 무료체험 시작하기 →
+                  {heroCta.label} →
                 </a>
               </div>
             </motion.div>
