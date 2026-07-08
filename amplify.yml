@@ -6,6 +6,9 @@ frontend:
         - npm ci
     build:
       commands:
+        - printf "LANDING_CONFIG_API_BASE=%s\n" "$LANDING_CONFIG_API_BASE" > .env.production
+        - printf "LANDING_REVALIDATE_SECRET=%s\n" "$LANDING_REVALIDATE_SECRET" >> .env.production
+        - printf "NEXT_PUBLIC_GTM_ID=%s\n" "$NEXT_PUBLIC_GTM_ID" >> .env.production
         - npm run build
   artifacts:
     # Next.js SSR (WEB_COMPUTE) build output.
