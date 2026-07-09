@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import { getAllPosts } from "@/lib/posts";
 import { SITE_URL } from "@/lib/site";
 import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
-import { buildServerLandingAttribution } from "@/lib/activation-attribution";
+import {
+  buildAttributedInternalHref,
+  buildServerLandingAttribution,
+} from "@/lib/activation-attribution";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -68,7 +71,10 @@ export default async function BlogListPage({ searchParams }: PageProps) {
             {posts.map((post) => (
               <a
                 key={post.slug}
-                href={`/blog/${post.slug}`}
+                href={buildAttributedInternalHref(
+                  `/blog/${post.slug}`,
+                  initialAttribution
+                )}
                 className="group block rounded-3xl border border-neutral-100 bg-white p-6 transition hover:border-neutral-200 hover:shadow-lg sm:p-8"
               >
                 <div className="mb-3 text-sm font-medium text-neutral-400">

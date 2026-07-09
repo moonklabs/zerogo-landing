@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { LOGO_URL, APP_URL_PROD, APP_URL_DEV } from "@/lib/site";
 import {
+  buildAttributedInternalHref,
   buildAttributedAppUrl,
   captureLandingCtaClicked,
   captureLandingPageViewed,
@@ -36,6 +37,11 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const homeHref = buildAttributedInternalHref("/", initialAttribution);
+  const navItems = NAV_ITEMS.map((item) => ({
+    ...item,
+    href: buildAttributedInternalHref(item.href, initialAttribution),
+  }));
 
   useEffect(() => {
     captureLandingPageViewed();
@@ -100,7 +106,11 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
       <div className="relative mx-auto flex h-[70px] max-w-[1180px] items-center justify-between px-5 max-[900px]:px-4 min-[901px]:h-[78px] min-[1201px]:h-[84px]">
         {/* Logo */}
         <div className="flex flex-1 items-center gap-2.5">
-          <Link href="/" className="shrink-0" onClick={() => setMenuOpen(false)}>
+          <Link
+            href={homeHref}
+            className="shrink-0"
+            onClick={() => setMenuOpen(false)}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={LOGO_URL}
@@ -119,7 +129,7 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
 
         {/* Desktop nav */}
         <nav className="hidden flex-1 items-center justify-center gap-[37px] text-[15px] font-semibold text-[#111] md:flex">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -165,7 +175,7 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
               className="absolute left-1/2 top-[calc(100%+10px)] w-[min(420px,calc(100vw-28px))] -translate-x-1/2 rounded-[22px] border border-black/10 bg-white/98 p-3.5 shadow-[0_18px_48px_rgba(0,0,0,0.14)] backdrop-blur-lg md:hidden"
             >
               <ul className="flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => (
+                {navItems.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}

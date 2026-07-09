@@ -5,7 +5,10 @@ import Link from "next/link";
 import { SiteHeader, BlogFooter } from "@/app/_components/BlogChrome";
 import { getAllSlugs, getPostBySlug } from "@/lib/posts";
 import { SITE_URL, COMPANY } from "@/lib/site";
-import { buildServerLandingAttribution } from "@/lib/activation-attribution";
+import {
+  buildAttributedInternalHref,
+  buildServerLandingAttribution,
+} from "@/lib/activation-attribution";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -119,7 +122,7 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
 
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Link
-          href="/blog"
+          href={buildAttributedInternalHref("/blog", initialAttribution)}
           className="mb-8 inline-flex items-center text-sm font-medium text-neutral-400 hover:text-black"
         >
           ← 블로그 목록으로
