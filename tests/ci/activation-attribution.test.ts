@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import HomeClient from "../../app/_components/HomeClient";
 import {
   buildAttributedAppUrl,
+  buildAttributedInternalHref,
   buildLandingAttribution,
   buildServerLandingAttribution,
   captureLandingCtaClicked,
@@ -115,6 +116,52 @@ describe("landing activation attribution", () => {
     expect(url.searchParams.has("cta_id")).toBe(false);
   });
 
+  it("preserves allowlisted UTM params across internal links only", () => {
+    const href = buildAttributedInternalHref("/blog?tab=latest#top");
+    const url = new URL(href, "https://www.zerogo.ai");
+
+    expect(url.pathname).toBe("/blog");
+    expect(url.hash).toBe("#top");
+    expect(url.searchParams.get("tab")).toBe("latest");
+    expect(url.searchParams.get("utm_source")).toBe("google");
+    expect(url.searchParams.get("utm_medium")).toBe("cpc");
+    expect(url.searchParams.get("utm_campaign")).toBe("rocket");
+    expect(url.searchParams.has("email")).toBe(false);
+    expect(url.searchParams.has("token")).toBe(false);
+    expect(buildAttributedInternalHref("https://app.zerogo.ai/login")).toBe(
+      "https://app.zerogo.ai/login"
+    );
+  });
+
+  it("builds hydration-safe internal hrefs from server-visible UTM fields", () => {
+    const initialAttribution = buildServerLandingAttribution({
+      landingPath: "/",
+      searchParams: {
+        utm_source: "newsletter",
+        utm_medium: "email",
+        email: "seller@example.com",
+      },
+    });
+    const originalWindow = globalThis.window;
+    try {
+      Reflect.deleteProperty(globalThis, "window");
+      const url = new URL(
+        buildAttributedInternalHref("/blog", initialAttribution),
+        "https://www.zerogo.ai"
+      );
+
+      expect(url.pathname).toBe("/blog");
+      expect(url.searchParams.get("utm_source")).toBe("newsletter");
+      expect(url.searchParams.get("utm_medium")).toBe("email");
+      expect(url.searchParams.has("email")).toBe(false);
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
+  });
+
   it("keeps the same landing distinct id across CTA links in one browser", () => {
     const first = buildLandingAttribution(CTA);
     const second = buildLandingAttribution({
@@ -204,6 +251,8 @@ describe("landing activation attribution", () => {
     try {
       Reflect.deleteProperty(globalThis, "window");
       const html = renderToString(React.createElement(HomeClient, { initialAttribution }));
+      expect(html).toContain('href="/?utm_source=newsletter&amp;utm_medium=email"');
+      expect(html).toContain('href="/blog?utm_source=newsletter&amp;utm_medium=email"');
       expect(html).toContain("landing_cta_id=header_primary");
       expect(html).toContain("landing_path=%2F");
       expect(html).toContain("utm_source=newsletter");

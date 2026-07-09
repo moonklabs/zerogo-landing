@@ -23,6 +23,7 @@ type AttributionKey =
   | "referrer_domain";
 
 type ServerSearchParams = Record<string, string | string[] | undefined>;
+type SearchParamReader = Pick<URLSearchParams, "get">;
 
 const DISTINCT_ID_STORAGE_KEY = "zerogo.landingDistinctId.v1";
 const JOURNEY_ID_STORAGE_KEY = "zerogo.activationJourneyId.v1";
@@ -195,9 +196,53 @@ export function buildAttributedAppUrl(
   return url.toString();
 }
 
+export function buildAttributedInternalHref(
+  href: string,
+  initialAttribution: LandingInitialAttribution = {},
+  currentSearchParams?: SearchParamReader
+): string {
+  if (!href.startsWith("/") || href.startsWith("//")) return href;
+
+  const url = new URL(href, "https://www.zerogo.ai");
+  const attribution = campaignAttributionForInternalLink(
+    initialAttribution,
+    currentSearchParams
+  );
+
+  for (const key of UTM_KEYS) {
+    const value = normalizeValue(attribution[key]);
+    if (value) url.searchParams.set(key, value);
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 export function getLandingReplayDistinctId(): string | null {
   if (typeof window === "undefined") return null;
   return buildLandingBaseAttribution().landing_distinct_id ?? null;
+}
+
+function campaignAttributionForInternalLink(
+  initialAttribution: LandingInitialAttribution,
+  currentSearchParams?: SearchParamReader
+): LandingInitialAttribution {
+  const attribution: LandingInitialAttribution = {};
+  const searchParams =
+    currentSearchParams ??
+    (typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search));
+
+  for (const key of UTM_KEYS) {
+    const currentValue = searchParams
+      ? normalizeValue(searchParams.get(key) ?? undefined)
+      : undefined;
+    const initialValue = normalizeValue(initialAttribution[key]);
+    const value = currentValue ?? initialValue;
+    if (value) attribution[key] = value;
+  }
+
+  return attribution;
 }
 
 export function captureLandingPageViewed(): void {
