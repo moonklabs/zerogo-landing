@@ -28,22 +28,24 @@ const HEADER_CTA: LandingCta = {
 
 type SiteHeaderProps = {
   initialAttribution?: LandingInitialAttribution;
+  previewMode?: boolean;
 };
 
-export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
+export function SiteHeader({ initialAttribution, previewMode = false }: SiteHeaderProps = {}) {
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
   const [headerHref, setHeaderHref] = useState(() =>
-    buildAttributedAppUrl(APP_URL_PROD, HEADER_CTA, initialAttribution)
+    previewMode ? "#preview" : buildAttributedAppUrl(APP_URL_PROD, HEADER_CTA, initialAttribution)
   );
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const homeHref = buildAttributedInternalHref("/", initialAttribution);
+  const homeHref = previewMode ? "/" : buildAttributedInternalHref("/", initialAttribution);
   const navItems = NAV_ITEMS.map((item) => ({
     ...item,
-    href: buildAttributedInternalHref(item.href, initialAttribution),
+    href: previewMode ? item.href : buildAttributedInternalHref(item.href, initialAttribution),
   }));
 
   useEffect(() => {
+    if (previewMode) return;
     captureLandingPageViewed();
     let nextAppUrl = APP_URL_PROD;
     const hostname = window.location.hostname;
@@ -58,7 +60,7 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
     }
     setAppUrl(nextAppUrl);
     setHeaderHref(buildAttributedAppUrl(nextAppUrl, HEADER_CTA));
-  }, []);
+  }, [previewMode]);
 
   // Close on Escape key
   useEffect(() => {
@@ -145,6 +147,10 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
           <a
             href={headerHref}
             onClick={(event) => {
+              if (previewMode) {
+                event.preventDefault();
+                return;
+              }
               event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
               captureLandingCtaClicked(HEADER_CTA);
             }}
@@ -190,6 +196,10 @@ export function SiteHeader({ initialAttribution }: SiteHeaderProps = {}) {
                   <a
                     href={headerHref}
                     onClick={(event) => {
+                      if (previewMode) {
+                        event.preventDefault();
+                        return;
+                      }
                       event.currentTarget.href = buildAttributedAppUrl(appUrl, HEADER_CTA);
                       captureLandingCtaClicked(HEADER_CTA);
                       setMenuOpen(false);

@@ -1,9 +1,13 @@
+"use client";
+
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 import { gtmId } from "@/lib/gtm";
 
 export function GoogleTagManager() {
+  const pathname = usePathname();
   const id = gtmId();
-  if (!id) return null;
+  if (!id || pathname.startsWith("/preview")) return null;
 
   return (
     <>

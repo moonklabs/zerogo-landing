@@ -7,6 +7,7 @@ export const LANDING_REPLAY_ROUTE_DECISIONS = {
   "/": true,
   "/admin": false,
   "/api/apply": false,
+  "/api/revalidate": false,
   "/blog": false,
   "/blog/[slug]": false,
   "/blog/[slug]/opengraph-image": false,
@@ -14,6 +15,7 @@ export const LANDING_REPLAY_ROUTE_DECISIONS = {
   "/opengraph-image": false,
   "/order-timing-calculator": false,
   "/order-timing-calculator/opengraph-image": false,
+  "/preview": false,
   "/robots.txt": false,
   "/sitemap.xml": false,
 } as const;

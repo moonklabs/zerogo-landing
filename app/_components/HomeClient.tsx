@@ -12,7 +12,7 @@ import {
   ShoppingCart,
   TrendingDown,
 } from "lucide-react";
-import { useEffect, useState, type MouseEvent } from "react";
+import { Fragment, useEffect, useState, type MouseEvent } from "react";
 import { APP_URL_PROD, APP_URL_DEV, FAQ_ITEMS } from "@/lib/site";
 import { SiteHeader } from "@/app/_components/BlogChrome";
 import {
@@ -52,6 +52,20 @@ const PROBLEM_CARDS = [
   },
 ];
 
+function usePrefersReducedMotion(): boolean {
+  // Default to reduced motion through SSR/hydration so motion is never started
+  // before the browser preference is known.
+  const [reduced, setReduced] = useState(true);
+  useEffect(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReduced(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return reduced;
+}
+
 const BRIEFING_CARDS = [
   { title: "매일 아침 브리핑", desc: "긴급·주의·입고 확인 건수를 카카오로 먼저 받아봅니다." },
   { title: "상품명까지 바로 확인", desc: "알림 안에서 오늘 봐야 할 상품 목록을 바로 확인합니다." },
@@ -82,15 +96,16 @@ const TRUST_POINTS = [
 function useAttributedHref(
   appUrl: string,
   cta: LandingCta,
-  initialAttribution?: LandingInitialAttribution
+  initialAttribution?: LandingInitialAttribution,
+  disabled = false,
 ) {
   const [href, setHref] = useState(() =>
-    buildAttributedAppUrl(APP_URL_PROD, cta, initialAttribution)
+    disabled ? "#preview" : buildAttributedAppUrl(APP_URL_PROD, cta, initialAttribution)
   );
   useEffect(() => {
-    setHref(buildAttributedAppUrl(appUrl, cta));
+    setHref(disabled ? "#preview" : buildAttributedAppUrl(appUrl, cta));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appUrl]);
+  }, [appUrl, disabled]);
   return href;
 }
 
@@ -119,10 +134,12 @@ type HomeClientProps = {
   initialAttribution?: LandingInitialAttribution;
   // 실험 변형 슬롯 (utm_content로 발행된 문구) — null이면 기본 문구 렌더
   variantSlots?: LandingVariantSlots | null;
+  previewMode?: boolean;
 };
 
-export default function HomeClient({ initialAttribution, variantSlots }: HomeClientProps) {
+export default function HomeClient({ initialAttribution, variantSlots, previewMode = false }: HomeClientProps) {
   const [appUrl, setAppUrl] = useState(APP_URL_PROD);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const hostname = window.location.hostname;
@@ -136,19 +153,29 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
   }, []);
 
   // 변형 CTA 문구는 클릭 계측 라벨에도 그대로 실린다 (같은 id, label만 교체)
-  const heroCta: LandingCta = variantSlots?.ctaText
+  const heroCta: LandingCta = variantSlots
     ? { id: HERO_CTA.id, label: variantSlots.ctaText }
     : HERO_CTA;
-  const heroHref = useAttributedHref(appUrl, heroCta, initialAttribution);
-  const solutionHref = useAttributedHref(appUrl, SOLUTION_CTA, initialAttribution);
-  const stepsHref = useAttributedHref(appUrl, STEPS_CTA, initialAttribution);
-  const bottomHref = useAttributedHref(appUrl, BOTTOM_CTA, initialAttribution);
+  const heroHref = useAttributedHref(appUrl, heroCta, initialAttribution, previewMode);
+  const solutionHref = useAttributedHref(appUrl, SOLUTION_CTA, initialAttribution, previewMode);
+  const stepsHref = useAttributedHref(appUrl, STEPS_CTA, initialAttribution, previewMode);
+  const bottomHref = useAttributedHref(appUrl, BOTTOM_CTA, initialAttribution, previewMode);
 
   const makeCtaClickHandler =
     (cta: LandingCta) => (event: MouseEvent<HTMLAnchorElement>) => {
+      if (previewMode) {
+        event.preventDefault();
+        return;
+      }
       event.currentTarget.href = buildAttributedAppUrl(appUrl, cta);
       captureLandingCtaClicked(cta);
     };
+
+  const blockPreviewNavigation = (event: MouseEvent<HTMLDivElement>) => {
+    if (!previewMode || !(event.target instanceof Element) || !event.target.closest("a")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   const fadeIn = {
     initial: { opacity: 0, y: 20 },
@@ -163,12 +190,16 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#0b0b0d] selection:bg-brand/20 selection:text-brand">
-      <SiteHeader initialAttribution={initialAttribution} />
+    <div
+      className="min-h-screen bg-white font-sans text-[#0b0b0d] selection:bg-brand/20 selection:text-brand"
+      data-preview-mode={previewMode ? "true" : undefined}
+      onClickCapture={blockPreviewNavigation}
+    >
+      <SiteHeader initialAttribution={initialAttribution} previewMode={previewMode} />
 
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-white pt-[92px] pb-[114px] max-[900px]:pt-[70px] max-[900px]:pb-[88px] max-[640px]:pt-[52px] max-[640px]:pb-[70px]">
+        <section data-slot="hero" className="relative overflow-hidden bg-white pt-[92px] pb-[114px] max-[900px]:pt-[70px] max-[900px]:pb-[88px] max-[640px]:pt-[52px] max-[640px]:pb-[70px]">
           <div className="mx-auto w-full max-w-[1180px] px-5 max-[1200px]:max-w-[1040px] max-[640px]:px-[14px]">
             <motion.div
               className="mx-auto max-w-[1045px] text-center"
@@ -176,12 +207,17 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             >
-              <span className="inline-flex items-center justify-center rounded-full border border-brand/25 bg-brand/[0.03] px-[17px] py-[9px] text-[16px] font-extrabold tracking-[0.075em] text-brand uppercase max-[640px]:px-3 max-[640px]:py-2 max-[640px]:text-[12px]">
-                로켓그로스 품절 방지
+              <span data-slot="badge" className="inline-flex items-center justify-center rounded-full border border-brand/25 bg-brand/[0.03] px-[17px] py-[9px] text-[16px] font-extrabold tracking-[0.075em] text-brand uppercase max-[640px]:px-3 max-[640px]:py-2 max-[640px]:text-[12px]">
+                {variantSlots?.badgeText ?? "로켓그로스 품절 방지"}
               </span>
-              <h1 className="mt-[31px] text-[70px] leading-[90px] font-black tracking-[-0.03em] text-black max-[1200px]:text-[58px] max-[1200px]:leading-[1.22] max-[900px]:text-[44px] max-[640px]:text-[34px] max-[640px]:leading-[1.24] max-[640px]:tracking-[-0.045em]">
+              <h1 data-slot="headline" className="mt-[31px] text-[70px] leading-[90px] font-black tracking-[-0.03em] text-black max-[1200px]:text-[58px] max-[1200px]:leading-[1.22] max-[900px]:text-[44px] max-[640px]:text-[34px] max-[640px]:leading-[1.24] max-[640px]:tracking-[-0.045em]">
                 {variantSlots ? (
-                  variantSlots.headline
+                  variantSlots.headline.split("\n").map((line, index) => (
+                    <Fragment key={`${index}:${line}`}>
+                      {index > 0 && <br />}
+                      {line}
+                    </Fragment>
+                  ))
                 ) : (
                   <>
                     여러 계정 판매로
@@ -190,8 +226,8 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
                   </>
                 )}
               </h1>
-              <p className="mx-auto mt-[31px] max-w-[1045px] text-[22px] leading-[36px] font-semibold text-black/70 max-[1200px]:text-[20px] max-[1200px]:leading-[1.65] max-[900px]:text-[18px] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
-                {variantSlots?.subheadline ? (
+              <p data-slot="sub" className="mx-auto mt-[31px] max-w-[1045px] text-[22px] leading-[36px] font-semibold text-black/70 max-[1200px]:text-[20px] max-[1200px]:leading-[1.65] max-[900px]:text-[18px] max-[640px]:text-[16px] max-[640px]:leading-[1.6]">
+                {variantSlots ? (
                   variantSlots.subheadline
                 ) : (
                   <>
@@ -203,6 +239,7 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
               </p>
               <div className="mt-[37px] flex justify-center">
                 <a
+                  data-slot="cta"
                   href={heroHref}
                   onClick={makeCtaClickHandler(heroCta)}
                   className="inline-flex min-h-[70px] min-w-[335px] items-center justify-center rounded-full bg-brand px-8 text-[20px] font-extrabold text-white shadow-[0_10px_12px_rgba(255,86,25,0.18)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_26px_rgba(255,86,25,0.25)] max-[900px]:min-h-[60px] max-[900px]:w-full max-[900px]:max-w-[335px] max-[900px]:min-w-0 max-[640px]:text-[17px]"
@@ -223,21 +260,34 @@ export default function HomeClient({ initialAttribution, variantSlots }: HomeCli
                 className="absolute -inset-0.5 z-0 translate-x-[18px] translate-y-[18px] rounded-[38px] bg-[linear-gradient(151deg,rgba(255,86,25,0.6)_0%,rgba(0,0,0,0)_35%,rgba(255,86,25,0.24)_100%)]"
               />
               <div className="relative z-10 overflow-hidden rounded-[19px] border border-[#e5e5e5] bg-white p-5 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] max-[640px]:rounded-2xl max-[640px]:p-2.5">
-                <div className="relative overflow-hidden rounded-[14px] bg-[#eef3f6] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] max-[640px]:rounded-xl">
-                  <video
-                    className="h-auto w-full"
-                    width={7200}
-                    height={4030}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    preload="metadata"
-                    aria-label="ZEROGO 대시보드 데모 영상"
-                  >
-                    <source src="/zerogo_demo.mp4" type="video/mp4" />
-                    브라우저가 영상을 지원하지 않습니다.
-                  </video>
+                <div data-slot="media" className="relative overflow-hidden rounded-[14px] bg-[#eef3f6] shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)] max-[640px]:rounded-xl">
+                  {variantSlots?.heroMedia?.kind === "image" ? (
+                    <img
+                      className="h-auto w-full"
+                      src={variantSlots.heroMedia.path}
+                      width={variantSlots.heroMedia.width}
+                      height={variantSlots.heroMedia.height}
+                      alt={variantSlots.heroMedia.alt}
+                    />
+                  ) : (
+                    <video
+                      className="h-auto w-full"
+                      width={variantSlots?.heroMedia?.width ?? 7200}
+                      height={variantSlots?.heroMedia?.height ?? 4030}
+                      autoPlay={!prefersReducedMotion}
+                      muted
+                      loop={!prefersReducedMotion}
+                      playsInline
+                      preload="metadata"
+                      aria-label={variantSlots?.heroMedia?.alt || "ZEROGO 대시보드 데모 영상"}
+                    >
+                      <source
+                        src={variantSlots?.heroMedia?.kind === "video" ? variantSlots.heroMedia.path : "/zerogo_demo.mp4"}
+                        type="video/mp4"
+                      />
+                      브라우저가 영상을 지원하지 않습니다.
+                    </video>
+                  )}
                   <div className="absolute top-[23px] left-[23px] rounded-full bg-brand px-3.5 py-[5px] text-[13.3px] font-black tracking-[0.026em] text-white uppercase shadow-[0_0_0_1px_rgba(255,255,255,0.3),0_1px_3px_rgba(255,86,25,0.2)] max-[640px]:top-2.5 max-[640px]:left-2.5 max-[640px]:px-2.5 max-[640px]:py-1 max-[640px]:text-[11px]">
                     실제 데모 화면
                   </div>
