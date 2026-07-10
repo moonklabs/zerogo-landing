@@ -1,4 +1,5 @@
 import type { LandingHeroMedia, LandingVariantSlots } from "@/lib/landing-variant";
+import { readTrustedLandingMediaPath } from "@/lib/landing-media-gcs";
 
 export const HERO_PREVIEW_PROTOCOL_VERSION = 1 as const;
 export const HERO_PREVIEW_READY = "hero.preview.ready" as const;
@@ -8,7 +9,6 @@ export const HERO_PREVIEW_APPLIED = "hero.preview.applied" as const;
 
 const NONCE = /^[a-zA-Z0-9-]{16,128}$/;
 const LOCAL_MEDIA_ID = /^[a-zA-Z0-9-]{8,128}$/;
-const IMMUTABLE_MEDIA_PATH = /^\/landing-media\/[a-f0-9]{64}\.(?:jpg|png|mp4)$/;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export type HeroPreviewMedia =
@@ -73,8 +73,10 @@ function readMedia(value: unknown): HeroPreviewMedia | null {
   if (value.source === "local" && value.kind === "image" && typeof value.id === "string" && LOCAL_MEDIA_ID.test(value.id)) {
     return { source: "local", kind: "image", id: value.id, alt: value.alt };
   }
-  if (value.source !== "asset" || (value.kind !== "image" && value.kind !== "video") || typeof value.path !== "string" || !IMMUTABLE_MEDIA_PATH.test(value.path)) return null;
-  const extension = value.path.slice(value.path.lastIndexOf(".") + 1);
+  if (value.source !== "asset" || (value.kind !== "image" && value.kind !== "video") || typeof value.path !== "string") return null;
+  const trustedPath = readTrustedLandingMediaPath(value.path);
+  if (!trustedPath) return null;
+  const extension = trustedPath.extension;
   const validKind =
     (value.kind === "video" && value.mimeType === "video/mp4" && extension === "mp4") ||
     (value.kind === "image" && value.mimeType === "image/png" && extension === "png") ||
@@ -83,7 +85,7 @@ function readMedia(value: unknown): HeroPreviewMedia | null {
   const mimeType = value.mimeType as "image/jpeg" | "image/png" | "video/mp4";
   const width = typeof value.width === "number" && Number.isSafeInteger(value.width) && value.width > 0 ? value.width : undefined;
   const height = typeof value.height === "number" && Number.isSafeInteger(value.height) && value.height > 0 ? value.height : undefined;
-  return { source: "asset", kind: value.kind, path: value.path, mimeType, alt: value.alt, width, height };
+  return { source: "asset", kind: value.kind, path: trustedPath.path, mimeType, alt: value.alt, width, height };
 }
 
 export function readHeroPreviewUpdate(value: unknown, nonce: string): HeroPreviewUpdate | null {

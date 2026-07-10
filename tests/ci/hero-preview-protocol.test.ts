@@ -7,6 +7,7 @@ import {
   toPreviewSlots,
 } from "../../lib/hero-preview-protocol";
 import { allowedPreviewParentOrigin, configuredPreviewParentOrigins } from "../../lib/hero-preview-parent-origin";
+import { LANDING_MEDIA_GCS_PUBLIC_BASE } from "../../lib/landing-media-gcs";
 
 const nonce = "1234567890abcdef";
 const sha = "a".repeat(64);
@@ -51,5 +52,13 @@ describe("Hero preview protocol", () => {
     expect(toPreviewSlots(update!, null)?.heroMedia?.path).toBe(`/landing-media/${sha}.png`);
     expect(readHeroPreviewUpdate({ ...message, nonce: "wrong-nonce-0000" }, nonce)).toBeNull();
     expect(readHeroPreviewUpdate({ ...message, payload: { ...message.payload, media: { ...message.payload.media, path: "https://evil.example/a.png" } } }, nonce)).toBeNull();
+    vi.stubEnv("NEXT_PUBLIC_LANDING_MEDIA_GCS_PUBLIC_BASE", LANDING_MEDIA_GCS_PUBLIC_BASE);
+    const directPath = `${LANDING_MEDIA_GCS_PUBLIC_BASE}/landing-media/${sha}.png`;
+    const direct = readHeroPreviewUpdate({ ...message, payload: { ...message.payload, media: { ...message.payload.media, path: directPath } } }, nonce);
+    expect(direct).not.toBeNull();
+    expect(toPreviewSlots(direct!, null)?.heroMedia?.path).toBe(directPath);
+    expect(readHeroPreviewUpdate({ ...message, payload: { ...message.payload, media: { ...message.payload.media, path: `https://storage.googleapis.com/other-bucket/landing-media/${sha}.png` } } }, nonce)).toBeNull();
+    expect(readHeroPreviewUpdate({ ...message, payload: { ...message.payload, media: { ...message.payload.media, path: `${LANDING_MEDIA_GCS_PUBLIC_BASE}/landing-media/${sha}.mp4` } } }, nonce)).toBeNull();
+    expect(readHeroPreviewUpdate({ ...message, payload: { ...message.payload, media: { ...message.payload.media, path: `${directPath}?generation=1` } } }, nonce)).toBeNull();
   });
 });

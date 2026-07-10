@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { readTrustedLandingMediaPath } from "@/lib/landing-media-gcs";
 
 // 랜딩 변형 config — utm_content(=메타 광고 ID)로 zerogo-backend에서 히어로 슬롯을
 // 가져온다. 실험 대시보드에서 발행하면 /api/revalidate 훅이 태그를 무효화해
@@ -26,7 +27,6 @@ export type LandingHeroMedia = {
 const CONFIG_API_BASE =
   process.env.LANDING_CONFIG_API_BASE ?? "https://api.zerogo.ai";
 
-const IMMUTABLE_MEDIA_PATH = /^\/landing-media\/[a-f0-9]{64}\.(?:jpg|png|mp4)$/;
 const CONTROL_CHARACTER = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/u;
 
 type PublicVariantPayload = {
@@ -52,13 +52,16 @@ function validHeadline(value: unknown): value is string {
 function parseHeroMedia(value: unknown): LandingHeroMedia | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const media = value as Record<string, unknown>;
+  const trustedPath =
+    typeof media.path === "string"
+      ? readTrustedLandingMediaPath(media.path)
+      : null;
   if (
     typeof media.asset_id !== "number" ||
     !Number.isSafeInteger(media.asset_id) ||
     media.asset_id <= 0 ||
     (media.kind !== "image" && media.kind !== "video") ||
-    typeof media.path !== "string" ||
-    !IMMUTABLE_MEDIA_PATH.test(media.path) ||
+    !trustedPath ||
     typeof media.mime_type !== "string" ||
     typeof media.alt !== "string" ||
     media.alt.trim().length === 0 ||
@@ -67,7 +70,7 @@ function parseHeroMedia(value: unknown): LandingHeroMedia | undefined {
     return undefined;
   }
 
-  const extension = media.path.slice(media.path.lastIndexOf(".") + 1);
+  const extension = trustedPath.extension;
   const matchesKind =
     (media.kind === "video" && media.mime_type === "video/mp4" && extension === "mp4") ||
     (media.kind === "image" && media.mime_type === "image/png" && extension === "png") ||
@@ -84,7 +87,7 @@ function parseHeroMedia(value: unknown): LandingHeroMedia | undefined {
   return {
     assetId: media.asset_id,
     kind: media.kind,
-    path: media.path,
+    path: trustedPath.path,
     mimeType: media.mime_type as LandingHeroMedia["mimeType"],
     width,
     height,
