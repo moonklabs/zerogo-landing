@@ -37,8 +37,10 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    if (process.env.NODE_ENV !== "development") return [];
-    return [{ source: localDemoMediaPath, destination: "/images/home/order-preview.png" }];
+    if (process.env.NODE_ENV === "development") {
+      return [{ source: localDemoMediaPath, destination: "/images/home/order-preview.png" }];
+    }
+    return [];
   },
   // /admin (Decap CMS) is served by app/admin/route.ts (compute route) because
   // a static-file rewrite does not resolve on Amplify WEB_COMPUTE.

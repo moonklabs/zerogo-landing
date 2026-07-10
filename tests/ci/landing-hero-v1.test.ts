@@ -1,10 +1,13 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import HomeClient from "../../app/_components/HomeClient";
+import { LANDING_MEDIA_GCS_PUBLIC_BASE } from "../../lib/landing-media-gcs";
 import { parseLandingVariantPayload } from "../../lib/landing-variant";
 
 const SHA = "a".repeat(64);
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe("landing Hero V1", () => {
   it("keeps legacy copy without accepting Hero V1 fields", () => {
@@ -59,6 +62,35 @@ describe("landing Hero V1", () => {
     expect(imageHtml).toContain(`src="/landing-media/${SHA}.png"`);
     expect(imageHtml).toContain('alt="대시보드 화면"');
 
+    vi.stubEnv(
+      "NEXT_PUBLIC_LANDING_MEDIA_GCS_PUBLIC_BASE",
+      LANDING_MEDIA_GCS_PUBLIC_BASE,
+    );
+    const directPath = `${LANDING_MEDIA_GCS_PUBLIC_BASE}/landing-media/${SHA}.png`;
+    const direct = parseLandingVariantPayload({
+      headline: "첫 줄\n둘째 줄",
+      subheadline: "설명",
+      cta_text: "시작하기",
+      variant_id: 8,
+      hero_schema_version: 1,
+      badge_text: "품절 방지",
+      hero_media: {
+        asset_id: 42,
+        kind: "image",
+        path: directPath,
+        mime_type: "image/png",
+        width: 1200,
+        height: 800,
+        alt: "대시보드 화면",
+      },
+    });
+    expect(direct?.heroMedia?.path).toBe(directPath);
+    expect(
+      renderToStaticMarkup(
+        React.createElement(HomeClient, { variantSlots: direct }),
+      ),
+    ).toContain(`src="${directPath}"`);
+
     const invalid = parseLandingVariantPayload({
       headline: "첫 줄\n둘째 줄",
       subheadline: "설명",
@@ -69,7 +101,7 @@ describe("landing Hero V1", () => {
       hero_media: {
         asset_id: 42,
         kind: "image",
-        path: "https://evil.example/image.png",
+        path: `https://storage.googleapis.com/other-bucket/landing-media/${SHA}.png`,
         mime_type: "image/png",
         width: 1200,
         height: 800,
