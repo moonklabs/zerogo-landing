@@ -16,6 +16,7 @@ export function PostHogSessionReplayProvider() {
   const initializedRef = useRef(false);
 
   useLayoutEffect(() => {
+    if (pathname.startsWith("/preview")) return;
     const key = posthogReplayKey();
     if (!key) return;
 

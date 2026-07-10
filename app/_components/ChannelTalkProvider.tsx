@@ -16,7 +16,7 @@ export function ChannelTalkProvider() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!pluginKey) return;
+    if (!pluginKey || pathname.startsWith("/preview")) return;
 
     loadScript();
     boot({
@@ -28,10 +28,10 @@ export function ChannelTalkProvider() {
     return () => {
       shutdown();
     };
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
-    if (!pluginKey) return;
+    if (!pluginKey || pathname.startsWith("/preview")) return;
 
     setPage(pathname);
     track("PageView");
